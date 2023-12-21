@@ -1,0 +1,79 @@
+package com.telnet.leaveapp.telnetleavemanager.controllers;
+
+import com.telnet.leaveapp.telnetleavemanager.dto.TeamRequest;
+import com.telnet.leaveapp.telnetleavemanager.entities.Team;
+import com.telnet.leaveapp.telnetleavemanager.repositories.OrganizationalUnitRepository;
+import com.telnet.leaveapp.telnetleavemanager.services.TeamService;
+import com.telnet.leaveapp.telnetleavemanager.user.User;
+import com.telnet.leaveapp.telnetleavemanager.user.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Set;
+
+@RestController
+@RequestMapping("/api/v1/teams")
+@RequiredArgsConstructor
+public class TeamController {
+
+    private final TeamService teamService;
+    private final UserRepository userRepository;
+    private final OrganizationalUnitRepository organizationalUnitRepository;
+
+    @PostMapping("/management/create")
+    public ResponseEntity<?> createTeam(
+            TeamRequest request
+    ) {
+        //try {
+            teamService.createTeam(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Team Created Successfully");
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while creating team");
+//        }
+    }
+
+    @GetMapping("/management/all")
+    public ResponseEntity<List<Team>> getAllTeams() {
+        List<Team> teams = teamService.getAllTeams();
+        return new ResponseEntity<>(teams, HttpStatus.OK);
+    }
+
+    @GetMapping("/get/{id}")
+    public ResponseEntity<Team> getTeamById(@PathVariable Integer id) {
+        Team team = teamService.getTeamById(id);
+        return new ResponseEntity<>(team, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteTeam(@PathVariable Integer id) {
+        teamService.deleteTeam(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @DeleteMapping("/delete/by-name/{teamName}")
+    public ResponseEntity<Void> deleteTeam(@PathVariable String teamName) {
+        teamService.deleteTeamByName(teamName);
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    }
+
+    @GetMapping("/members/{teamId}")
+    public ResponseEntity<List<User>> getMembersOfTeam(@PathVariable Integer teamId) {
+        List<User> members = teamService.getMembersOfTeam(teamId);
+        return new ResponseEntity<>(members, HttpStatus.OK);
+    }
+
+    @GetMapping("/management/for-organizational-unit/{organizationalUnitId}")
+    public ResponseEntity<Set<Team>> getTeamsForOrganizationalUnit(@PathVariable Long organizationalUnitId) {
+        Set<Team> teams = teamService.getTeamsForOrganizationalUnit(organizationalUnitId);
+        return new ResponseEntity<>(teams, HttpStatus.OK);
+    }
+
+    @GetMapping("/management/{teamName}")
+    public ResponseEntity<Team> getTeamByName(@PathVariable String teamName) {
+        Team team = teamService.getTeamByName(teamName);
+        return new ResponseEntity<>(team, HttpStatus.OK);
+    }
+}
