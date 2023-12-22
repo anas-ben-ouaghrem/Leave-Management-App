@@ -37,6 +37,7 @@ public class AuthenticationService {
                 .lastName(request.getLastname())
                 .email(request.getEmail())
                 .phone(request.getPhone())
+                .gender(request.getGender())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole())
                 .mfaEnabled(request.isMfaEnabled())

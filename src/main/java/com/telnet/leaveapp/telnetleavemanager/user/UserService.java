@@ -47,58 +47,72 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    public User updateUser(User user) {
-        return repository.save(user);
-    }
-
-    public void deleteUser(String email) {
-        User userToBeDeleted = repository.findByEmail(email)
-                        .orElseThrow(()-> new RuntimeException("User not found!"));
-        repository.delete(userToBeDeleted);
-    }
-
-    public List<User> getAllUsers() {
-        return repository.findAll();
-    }
-
-    public void resetPassword(String email, String newPassword) {
-        User user = repository.findByEmail(email)
+    public User updateUser(String currentUserEmail, String targetUserEmail, RegisterRequest request) {
+        User currentUser = repository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        User targetUser = repository.findByEmail(targetUserEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (currentUser.getRole() != Role.ADMIN || currentUser != targetUser.getTeam().getManager() || currentUser != targetUser.getOrganizationalUnit().getManager() || currentUser != targetUser) {
+            throw new RuntimeException("You are not authorized to update this user");
+        }
+            currentUser.setPhone(request.getPhone() != null ? request.getPhone() : currentUser.getPhone());
+            currentUser.setFirstName(request.getFirstname() != null ? request.getFirstname() : currentUser.getFirstName());
+            currentUser.setLastName(request.getLastname() != null ? request.getLastname() : currentUser.getLastName());
+            currentUser.setEmail(request.getEmail() != null ? request.getEmail() : currentUser.getEmail());
+            currentUser.setRole(request.getRole() != null ? request.getRole() : currentUser.getRole());
+            currentUser.setMfaEnabled(request.isMfaEnabled());
 
-        String encodedPassword = passwordEncoder.encode(newPassword);
-        user.setPassword(encodedPassword);
+            return repository.save(targetUser);
+        }
 
-        var jwtToken = jwtService.generateToken(user);
-        authenticationService.revokeAllUserTokens(user);
-        authenticationService.saveUserToken(jwtToken, user);
-        // Save the updated user entity
-        repository.save(user);
-    }
+        public void deleteUser (String email){
+            User userToBeDeleted = repository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found!"));
+            repository.delete(userToBeDeleted);
+        }
 
-    public void affectTeamToUser(String userEmail, String teamName) {
-        User user = getUserByEmail(userEmail);
-        Team team = teamRepository.findByName(teamName)
-                        .orElseThrow(() -> new RuntimeException("Team not found!"));
-        user.setTeam(team);
-        repository.save(user);
-    }
+        public List<User> getAllUsers () {
+            return repository.findAll();
+        }
 
-    public void removeUserFromTeam(String userEmail, String teamName) {
-        User user = getUserByEmail(userEmail);
-        Team team = teamRepository.findByName(teamName)
-                .orElseThrow(() -> new RuntimeException("Team not found!"));
-        team.getMembers().remove(user);
-        user.setTeam(null);
-        repository.save(user);
-        teamRepository.save(team);
-    }
+        public void resetPassword (String email, String newPassword){
+            User user = repository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-    @Scheduled(cron = "0 0 0 1 1 ?")
-    public void resetAnnualLeaves() {
-        List<User> users = repository.findAll();
-        for (User user : users) {
-            user.setLeaveDays(26);
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            user.setPassword(encodedPassword);
+
+            var jwtToken = jwtService.generateToken(user);
+            authenticationService.revokeAllUserTokens(user);
+            authenticationService.saveUserToken(jwtToken, user);
+            // Save the updated user entity
             repository.save(user);
         }
+
+        public void affectTeamToUser (String userEmail, String teamName){
+            User user = getUserByEmail(userEmail);
+            Team team = teamRepository.findByName(teamName)
+                    .orElseThrow(() -> new RuntimeException("Team not found!"));
+            user.setTeam(team);
+            repository.save(user);
+        }
+
+        public void removeUserFromTeam (String userEmail, String teamName){
+            User user = getUserByEmail(userEmail);
+            Team team = teamRepository.findByName(teamName)
+                    .orElseThrow(() -> new RuntimeException("Team not found!"));
+            team.getMembers().remove(user);
+            user.setTeam(null);
+            repository.save(user);
+            teamRepository.save(team);
+        }
+
+        @Scheduled(cron = "0 0 0 1 1 ?")
+        public void resetAnnualLeaves () {
+            List<User> users = repository.findAll();
+            for (User user : users) {
+                user.setLeaveDays(26);
+                repository.save(user);
+            }
+        }
     }
-}

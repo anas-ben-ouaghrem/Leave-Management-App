@@ -87,16 +87,26 @@ public class OrganizationalUnitService {
     public void affectTeamToOrganizationalUnit(Long organizationalUnitId, String teamName) {
         OrganizationalUnit organizationalUnit = getOrganizationalUnitById(organizationalUnitId);
         if (organizationalUnit != null) {
-            organizationalUnit.getTeams().add(teamRepository.findByName(teamName).orElseThrow(() -> new RuntimeException("Team not found")));
-            organizationalUnitRepository.save(organizationalUnit);
+            Team team = teamRepository.findByName(teamName).orElseThrow(() -> new RuntimeException("Team not found"));
+            log.info(team.toString());
+            organizationalUnit.getTeams().add(team);
+            team.setOrganizationalUnit(organizationalUnit);
+            teamRepository.saveAndFlush(team);
+            organizationalUnitRepository.saveAndFlush(organizationalUnit);
+            log.info("Team " + teamName + " added to organizational unit");
         }
     }
 
     public void removeTeamFromOrganizationalUnit(Long organizationalUnitId, String teamName) {
         OrganizationalUnit organizationalUnit = getOrganizationalUnitById(organizationalUnitId);
         if (organizationalUnit != null) {
-            organizationalUnit.getTeams().remove(teamRepository.findByName(teamName).orElseThrow(() -> new RuntimeException("Team not found")));
-            organizationalUnitRepository.save(organizationalUnit);
+            Team team = teamRepository.findByName(teamName).orElseThrow(() -> new RuntimeException("Team not found"));
+            log.info(team.toString());
+            organizationalUnit.getTeams().remove(team);
+            team.setOrganizationalUnit(null);
+            teamRepository.saveAndFlush(team);
+            organizationalUnitRepository.saveAndFlush(organizationalUnit);
+            log.info("Team " + teamName + " removed from organizational unit");
         }
     }
 
@@ -119,6 +129,8 @@ public class OrganizationalUnitService {
             // Avoiding cyclic dependency
             if (!members.contains(member)) {
                 members.add(member);
+                member.setOrganizationalUnit(organizationalUnit);
+                userRepository.save(member);
                 organizationalUnit.setMembers(members);
                 organizationalUnitRepository.saveAndFlush(organizationalUnit);
             }
@@ -128,8 +140,19 @@ public class OrganizationalUnitService {
     public void removeMemberFromOrganizationalUnit(Long organizationalUnitId, String memberEmail) {
         OrganizationalUnit organizationalUnit = getOrganizationalUnitById(organizationalUnitId);
         if (organizationalUnit != null) {
-            organizationalUnit.getMembers().remove(userRepository.findByEmail(memberEmail).orElseThrow(() -> new RuntimeException("User not found")));
-            organizationalUnitRepository.save(organizationalUnit);
+            User member = userRepository.findByEmail(memberEmail)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            Set<User> members = organizationalUnit.getMembers();
+
+            // Avoiding cyclic dependency
+            if (members.contains(member)) {
+                members.remove(member);
+                member.setOrganizationalUnit(null);
+                userRepository.saveAndFlush(member);
+                organizationalUnit.setMembers(members);
+                organizationalUnitRepository.saveAndFlush(organizationalUnit);
+                log.info("Member " + memberEmail + " removed from organizational unit");
+            }
         }
     }
 }

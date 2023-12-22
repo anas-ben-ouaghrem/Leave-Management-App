@@ -3,6 +3,7 @@ package com.telnet.leaveapp.telnetleavemanager.services;
 import com.telnet.leaveapp.telnetleavemanager.dto.ExternalAuthorizationRequest;
 import com.telnet.leaveapp.telnetleavemanager.entities.ExternalAuthorization;
 import com.telnet.leaveapp.telnetleavemanager.entities.Status;
+import com.telnet.leaveapp.telnetleavemanager.exceptions.InsufficientAuthorizationBalanceException;
 import com.telnet.leaveapp.telnetleavemanager.exceptions.UnauthorizedActionException;
 import com.telnet.leaveapp.telnetleavemanager.repositories.ExternalAuthorizationRepository;
 import com.telnet.leaveapp.telnetleavemanager.user.Role;
@@ -35,9 +36,14 @@ public class ExternalAuthorizationService {
             throw new UnauthorizedActionException("You are not authorized to perform this action");
         }
 
+        if (user.getExternalActivitiesLimit() <= 0) {
+            throw new InsufficientAuthorizationBalanceException("You have reached the limit of external activities");
+        }
+
         ExternalAuthorization externalAuthorization = ExternalAuthorization.builder()
                 .leaveDuration(request.getLeaveDuration())
                 .startDate(request.getDate())
+                .endDate(request.getDate().plusMinutes(request.getLeaveDuration().getDuration()))
                 .status(Status.PENDING)
                 .createdAt(LocalDateTime.now())
                 .user(user)
@@ -50,18 +56,19 @@ public class ExternalAuthorizationService {
                 .orElseThrow(() -> new RuntimeException("External authorization not found"));
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        if (currentUser != externalAuthorization.getUser().getOrganizationalUnit().getManager() || currentUser.getRole().equals(Role.ADMIN) || currentUser != externalAuthorization.getUser().getTeam().getManager()) {
+        if ( (currentUser != externalAuthorization.getUser().getOrganizationalUnit().getManager() && currentUser.getRole() != Role.ADMIN )|| currentUser.getRole() != Role.ADMIN || (currentUser != externalAuthorization.getUser().getTeam().getManager() && currentUser.getRole() != Role.ADMIN)) {
             throw new UnauthorizedActionException("You are not authorized to treat this external authorization");
         }
+        User user = externalAuthorization.getUser();
         if (status == Status.ACCEPTED) {
-            currentUser.setExternalActivitiesLimit(currentUser.getExternalActivitiesLimit() - 1);
-            userRepository.save(currentUser);
+            user.setExternalActivitiesLimit(user.getExternalActivitiesLimit() - 1);
+            userRepository.saveAndFlush(user);
             log.info("External authorization accepted");
         } else if (status == Status.REJECTED) {
             log.info("External authorization rejected");
         }
         externalAuthorization.setStatus(status);
-        externalAuthorizationRepository.save(externalAuthorization);
+        externalAuthorizationRepository.saveAndFlush(externalAuthorization);
     }
 
     public List<ExternalAuthorization> getAllExternalAuthorizations() {

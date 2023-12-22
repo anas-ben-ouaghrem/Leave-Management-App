@@ -1,10 +1,7 @@
 package com.telnet.leaveapp.telnetleavemanager.services;
 
 import com.telnet.leaveapp.telnetleavemanager.dto.LeaveRequest;
-import com.telnet.leaveapp.telnetleavemanager.entities.EmployeeLeave;
-import com.telnet.leaveapp.telnetleavemanager.entities.ExceptionalLeaveType;
-import com.telnet.leaveapp.telnetleavemanager.entities.LeaveType;
-import com.telnet.leaveapp.telnetleavemanager.entities.Status;
+import com.telnet.leaveapp.telnetleavemanager.entities.*;
 import com.telnet.leaveapp.telnetleavemanager.exceptions.InsufficientLeaveBalanceException;
 import com.telnet.leaveapp.telnetleavemanager.exceptions.UnauthorizedActionException;
 import com.telnet.leaveapp.telnetleavemanager.repositories.EmployeeLeaveRepository;
@@ -31,7 +28,7 @@ public class EmployeeLeaveService {
         validateLeaveRequest(leaveRequest);
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        User user = userRepository.findById(leaveRequest.getUserId())
+        User user = userRepository.findByEmail(leaveRequest.getUserEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         EmployeeLeave leave = EmployeeLeave.builder()
@@ -41,11 +38,12 @@ public class EmployeeLeaveService {
                 .startDate(leaveRequest.getStartDate())
                 .status(Status.PENDING)
                 .createdAt(LocalDateTime.now())
+                .timeOfDay(leaveRequest.getTimeOfDay() != TimeOfDay.INAPPLICABLE ? leaveRequest.getTimeOfDay() : TimeOfDay.INAPPLICABLE)
                 .build();
 
         if (leaveRequest.getLeaveType() == LeaveType.PERSONAL_LEAVE || leaveRequest.getLeaveType() == LeaveType.SICK_LEAVE) {
             leave.setExceptionalLeaveType(ExceptionalLeaveType.NONE);
-            if (leaveRequest.getLeaveType() == LeaveType.PERSONAL_LEAVE && user.getLeaveDays() < 1 || leaveRequest.getLeaveType() == LeaveType.HALF_DAY && user.getLeaveDays() < 1) {
+            if (leaveRequest.getLeaveType() == LeaveType.PERSONAL_LEAVE && user.getLeaveDays() <= 0 || leaveRequest.getLeaveType() == LeaveType.HALF_DAY && user.getLeaveDays() <= 0) {
                 throw new InsufficientLeaveBalanceException("You don't have enough leave days");
             }
             if (leaveRequest.getLeaveType() == LeaveType.SICK_LEAVE && currentUser.getRole()!= Role.ADMIN) {
@@ -95,6 +93,9 @@ public class EmployeeLeaveService {
         // Consider additional conditions or business rules for setting the status
         if ("ACCEPTED".equalsIgnoreCase(status)) {
             leaveRequest.setStatus(Status.ACCEPTED);
+            userRequestingLeave.setOnLeave(true);
+            userRequestingLeave.setReturnDate(leaveRequest.getEndDate());
+            userRepository.save(userRequestingLeave);
             updateLeaveBalance(leaveRequest, userRequestingLeave);
         } else if ("REJECTED".equalsIgnoreCase(status)) {
             leaveRequest.setStatus(Status.REJECTED);
@@ -124,12 +125,14 @@ public class EmployeeLeaveService {
         employeeLeaveRepository.delete(currentLeaveRequest);
     }
 
-    public EmployeeLeave updateLeaveRequestEmployee(Long leaveRequestId, LeaveRequest leaveRequest) {
+    public EmployeeLeave updateLeaveRequestEmployee(String currentUserEmail, Long leaveRequestId, LeaveRequest leaveRequest) {
 
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
         EmployeeLeave existingLeaveRequest = employeeLeaveRepository.findById(leaveRequestId)
                 .orElseThrow(() -> new IllegalArgumentException("Leave request not found"));
-        if (existingLeaveRequest.getStatus() != Status.PENDING) {
-            throw new UnauthorizedActionException("The Leave Request has already been processed");
+        if (existingLeaveRequest.getStatus() != Status.PENDING || currentUser!=existingLeaveRequest.getUser()) {
+            throw new UnauthorizedActionException("Unauthorized action");
         }
         return updateFields(leaveRequest, existingLeaveRequest);
     }
@@ -147,7 +150,9 @@ public class EmployeeLeaveService {
     public EmployeeLeave updateLeaveRequest(Long leaveRequestId, LeaveRequest leaveRequest) {
         EmployeeLeave existingLeaveRequest = employeeLeaveRepository.findById(leaveRequestId)
                 .orElseThrow(() -> new IllegalArgumentException("Leave request not found"));
-
+        if (existingLeaveRequest.getStatus() != Status.PENDING) {
+            throw new UnauthorizedActionException("The Leave Request has already been processed");
+        }
         return updateFields(leaveRequest, existingLeaveRequest);
     }
 
@@ -169,7 +174,7 @@ public class EmployeeLeaveService {
 
 
     private void validateLeaveRequest(LeaveRequest leaveRequest) {
-        if (leaveRequest.getUserId() == null) {
+        if (leaveRequest.getUserEmail() == null) {
             throw new IllegalArgumentException("User id is required");
         }
         if (leaveRequest.getLeaveType() == null) {

@@ -61,13 +61,13 @@ public class TeamLeaveController {
         return new ResponseEntity<>(teamLeaves, HttpStatus.OK);
     }
 
-    @DeleteMapping("/management/delete/{teamLeaveId}")
+    @DeleteMapping("/management/delete/team-lead/{teamLeaveId}")
     public ResponseEntity<Void> deleteTeamLeaveRequest(@PathVariable Long teamLeaveId) {
         teamLeaveService.deleteLeaveRequestTeamLead(teamLeaveId);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
-    @PutMapping("/management/treat/{teamLeaveId}")
+    @PutMapping("/management/update/{teamLeaveId}")
     public ResponseEntity<TeamLeave> updateTeamLeaveRequest(@PathVariable Long teamLeaveId) {
         TeamLeave teamLeave = teamLeaveService.updateLeaveRequestEmployee(teamLeaveId);
         return new ResponseEntity<>(teamLeave, HttpStatus.OK);

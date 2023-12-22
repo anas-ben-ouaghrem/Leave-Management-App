@@ -1,5 +1,6 @@
 package com.telnet.leaveapp.telnetleavemanager.auth;
 
+import com.telnet.leaveapp.telnetleavemanager.user.Gender;
 import com.telnet.leaveapp.telnetleavemanager.user.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +15,7 @@ public class RegisterRequest {
 
     private String firstname;
     private String lastname;
+    private Gender gender;
     private String email;
     private String password;
     private Role role;

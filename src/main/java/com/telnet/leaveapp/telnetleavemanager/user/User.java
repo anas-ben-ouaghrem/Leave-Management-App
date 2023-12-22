@@ -1,16 +1,15 @@
 package com.telnet.leaveapp.telnetleavemanager.user;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.telnet.leaveapp.telnetleavemanager.entities.EmployeeLeave;
 import com.telnet.leaveapp.telnetleavemanager.entities.OrganizationalUnit;
 import com.telnet.leaveapp.telnetleavemanager.entities.Team;
 import com.telnet.leaveapp.telnetleavemanager.entities.Token;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -23,6 +22,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@ToString(exclude = {"tokens","leaves"})
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +31,7 @@ public class User implements UserDetails {
     private String firstName;
     private String lastName;
     private String email;
+    private Gender gender;
     private String password;
     private String phone;
     @Builder.Default
@@ -49,6 +50,7 @@ public class User implements UserDetails {
 
     @ManyToOne
     @JoinColumn(name = "team_id",nullable = true)
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
     private Team team;
 
     @JsonIgnore

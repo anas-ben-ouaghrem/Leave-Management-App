@@ -1,6 +1,8 @@
 package com.telnet.leaveapp.telnetleavemanager.user;
 
 import com.telnet.leaveapp.telnetleavemanager.auth.RegisterRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,20 +17,20 @@ public class UserController {
 
     private final UserService userService;
 
-    //    @Operation(
-//            description = "Get endpoint for management",
-//            summary = "This is a summary for GET endpoint",
-//            responses = {
-//                    @ApiResponse(
-//                            description = "Success",
-//                            responseCode = "200"
-//                    ),
-//                    @ApiResponse(
-//                            description = "Unauthorized / Invalid Token",
-//                            responseCode = "403"
-//                    )
-//            }
-//    )
+        @Operation(
+            description = "Get endpoint for management",
+            summary = "This is a summary for GET endpoint",
+            responses = {
+                    @ApiResponse(
+                            description = "Success",
+                            responseCode = "200"
+                    ),
+                    @ApiResponse(
+                            description = "Unauthorized / Invalid Token",
+                            responseCode = "403"
+                    )
+            }
+    )
     @PostMapping("/admin/addUser")
     public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request) {
         try {
@@ -46,8 +48,8 @@ public class UserController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<User> updateUser(@RequestBody User user) {
-        User updatedUser = userService.updateUser(user);
+    public ResponseEntity<User> updateUser(@RequestParam String currentUserEmail, @RequestParam String targetUserEmail, @RequestBody RegisterRequest request) {
+        User updatedUser = userService.updateUser(currentUserEmail, targetUserEmail, request);
         return ResponseEntity.ok(updatedUser);
     }
 

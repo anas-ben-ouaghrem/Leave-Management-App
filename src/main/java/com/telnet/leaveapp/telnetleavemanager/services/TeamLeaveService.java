@@ -56,7 +56,7 @@ public class TeamLeaveService {
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
-        if ( currentUser.getRole() != Role.ADMIN || currentUser != leaveRequest.getTeam().getOrganizationalUnit().getManager()) {
+        if (currentUser.getRole() != Role.ADMIN && currentUser != leaveRequest.getTeam().getOrganizationalUnit().getManager() || currentUser.getRole() == Role.USER ) {
             throw new IllegalStateException("You are not authorized to treat this leave request.");
         }
         // Consider additional conditions or business rules for setting the status

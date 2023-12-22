@@ -38,7 +38,7 @@ public class TeamController {
     @GetMapping("/management/all")
     public ResponseEntity<List<Team>> getAllTeams() {
         List<Team> teams = teamService.getAllTeams();
-        return new ResponseEntity<>(teams, HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(teams);
     }
 
     @GetMapping("/get/{id}")
@@ -62,18 +62,18 @@ public class TeamController {
     @GetMapping("/members/{teamId}")
     public ResponseEntity<List<User>> getMembersOfTeam(@PathVariable Integer teamId) {
         List<User> members = teamService.getMembersOfTeam(teamId);
-        return new ResponseEntity<>(members, HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(members);
     }
 
     @GetMapping("/management/for-organizational-unit/{organizationalUnitId}")
     public ResponseEntity<Set<Team>> getTeamsForOrganizationalUnit(@PathVariable Long organizationalUnitId) {
         Set<Team> teams = teamService.getTeamsForOrganizationalUnit(organizationalUnitId);
-        return new ResponseEntity<>(teams, HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(teams);
     }
 
     @GetMapping("/management/{teamName}")
     public ResponseEntity<Team> getTeamByName(@PathVariable String teamName) {
         Team team = teamService.getTeamByName(teamName);
-        return new ResponseEntity<>(team, HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(team);
     }
 }

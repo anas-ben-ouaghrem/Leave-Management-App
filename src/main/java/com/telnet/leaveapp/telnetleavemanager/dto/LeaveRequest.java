@@ -2,6 +2,7 @@ package com.telnet.leaveapp.telnetleavemanager.dto;
 
 import com.telnet.leaveapp.telnetleavemanager.entities.ExceptionalLeaveType;
 import com.telnet.leaveapp.telnetleavemanager.entities.LeaveType;
+import com.telnet.leaveapp.telnetleavemanager.entities.TimeOfDay;
 import jakarta.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
@@ -12,10 +13,14 @@ import java.time.LocalDateTime;
 @Data
 public class LeaveRequest {
 
-    private Long userId;
+    private String userEmail;
     private LeaveType leaveType;
     private ExceptionalLeaveType exceptionalLeaveType = ExceptionalLeaveType.NONE;
-    private LocalDateTime startDate;
+    @Builder.Default
+    private TimeOfDay timeOfDay = TimeOfDay.INAPPLICABLE;
+    @Builder.Default
+    private LocalDateTime startDate = LocalDateTime.now();
     @Nullable
-    private LocalDateTime endDate;
+    @Builder.Default
+    private LocalDateTime endDate = LocalDateTime.now();
 }

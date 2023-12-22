@@ -50,8 +50,8 @@ public class ExternalAuthorizationController {
     }
 
     @PutMapping("/treat/{id}")
-    public ResponseEntity<Void> treatExternalAuthorization(@PathVariable Long id, @RequestParam String status, @RequestParam String email) {
-        externalAuthorizationService.treatExternalAuthorization(id, Status.valueOf(status), email);
+    public ResponseEntity<Void> treatExternalAuthorization(@PathVariable Long id, @RequestParam String status, @RequestParam String currentUserEmail) {
+        externalAuthorizationService.treatExternalAuthorization(id, Status.valueOf(status), currentUserEmail);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
