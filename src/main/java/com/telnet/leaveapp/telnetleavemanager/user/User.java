@@ -32,6 +32,7 @@ public class User implements UserDetails {
     private String lastName;
     private String email;
     private Gender gender;
+    @JsonIgnore
     private String password;
     private String phone;
     @Builder.Default
