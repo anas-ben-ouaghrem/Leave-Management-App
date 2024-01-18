@@ -66,7 +66,7 @@ public class UserController {
     }
 
     @PostMapping("/manager/affect-team")
-    public ResponseEntity<?> affectTeamToUser(String userEmail, String teamName){
+    public ResponseEntity<?> affectTeamToUser(@RequestParam String userEmail,@RequestParam String teamName){
         try {
             userService.affectTeamToUser(userEmail,teamName);
             return ResponseEntity.status(HttpStatus.CREATED).body("User Added Successfully to team "+ teamName);

@@ -25,6 +25,7 @@ public class TeamLeaveService {
     private final TeamLeaveRepository teamLeaveRepository;
     private final UserRepository userRepository;
     private final TeamRepository teamRepository;
+    private final MailingService mailingService;
 
     public TeamLeave createTeamLeave(String currentUserEmail, TeamLeaveRequest request) {
 
@@ -56,7 +57,7 @@ public class TeamLeaveService {
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
-        if (currentUser.getRole() != Role.ADMIN && currentUser != leaveRequest.getTeam().getOrganizationalUnit().getManager() || currentUser.getRole() == Role.USER ) {
+        if (currentUser.getRole() != Role.ADMIN && currentUser != leaveRequest.getTeam().getOrganizationalUnit().getManager() || currentUser.getRole() == Role.USER) {
             throw new IllegalStateException("You are not authorized to treat this leave request.");
         }
         // Consider additional conditions or business rules for setting the status
@@ -69,12 +70,13 @@ public class TeamLeaveService {
             throw new IllegalArgumentException("Invalid status provided.");
         }
 
+        this.mailingService.sendMail(leaveRequest.getTeam().getManager().getEmail(), "Leave Request Update", "The employee " + leaveRequest.getTeam().getManager().getFirstName() + " " + leaveRequest.getTeam().getManager().getLastName() + " has updated his leave request for the period " + leaveRequest.getStartDate() + " - " + leaveRequest.getEndDate() + ". Please check the leave request and take the appropriate action.");
         return teamLeaveRepository.save(leaveRequest);
     }
 
     public void deleteLeaveRequestTeamLead(Long id) {
         TeamLeave currentLeaveRequest = teamLeaveRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Leave request not found!"));
+                .orElseThrow(() -> new RuntimeException("Leave request not found!"));
         if (currentLeaveRequest.getStatus() != Status.PENDING) {
             throw new UnauthorizedActionException("This Leave Request has already been processed!");
         }
@@ -94,6 +96,7 @@ public class TeamLeaveService {
         existingLeaveRequest.setStartDate(leaveRequest.getStartDate());
         existingLeaveRequest.setEndDate(leaveRequest.getEndDate());
 
+        this.mailingService.sendMail(leaveRequest.getTeam().getManager().getEmail(), "Leave Request Update", "The employee " + leaveRequest.getTeam().getManager().getFirstName() + " " + leaveRequest.getTeam().getManager().getLastName() + " has updated his leave request for the period " + leaveRequest.getStartDate() + " - " + leaveRequest.getEndDate() + ". Please check the leave request and take the appropriate action.");
         return teamLeaveRepository.save(existingLeaveRequest);
     }
 
@@ -111,6 +114,16 @@ public class TeamLeaveService {
 
     public List<TeamLeave> getTeamLeavesForTeam(Long teamId) {
         return teamLeaveRepository.findByTeamId(teamId);
+    }
+
+    public TeamLeave updateTeamLeave(Long id, TeamLeaveRequest request) {
+        TeamLeave teamLeave = teamLeaveRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Leave request not found"));
+        teamLeave.setStartDate(request.getStartDate());
+        teamLeave.setEndDate(request.getEndDate());
+        teamLeave.setReason(request.getReason());
+        teamLeaveRepository.save(teamLeave);
+        return teamLeave;
     }
 }
 

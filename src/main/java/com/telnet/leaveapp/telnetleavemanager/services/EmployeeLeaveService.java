@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,6 +24,7 @@ public class EmployeeLeaveService {
 
     private final EmployeeLeaveRepository employeeLeaveRepository;
     private final UserRepository userRepository;
+    private final MailingService mailingService;
 
     public void createLeaveRequest(String currentUserEmail,LeaveRequest leaveRequest) {
         validateLeaveRequest(leaveRequest);
@@ -57,6 +59,7 @@ public class EmployeeLeaveService {
         }
 
         employeeLeaveRepository.save(leave);
+        this.mailingService.sendMail(user.getEmail(),"Leave request created", "Your leave request has been created");
     }
 
     private void calculateDurationAndSetEndDate(EmployeeLeave leave) {
@@ -103,7 +106,7 @@ public class EmployeeLeaveService {
         } else {
             throw new IllegalArgumentException("Invalid status provided.");
         }
-
+        this.mailingService.sendMail(userRequestingLeave.getEmail(),"Leave request treated", "Your leave request with id: " + leaveRequestId + " has been " + status);
         return employeeLeaveRepository.save(leaveRequest);
     }
 
@@ -186,5 +189,16 @@ public class EmployeeLeaveService {
         if (leaveRequest.getEndDate() == null) {
             throw new IllegalArgumentException("End date is required");
         }
+    }
+
+    public List<EmployeeLeave> getLeaveRequestsByManager(String managerEmail) {
+        List<EmployeeLeave> leaveRequests = new ArrayList<>();
+        User manager = userRepository.findByEmail(managerEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Team team = manager.getTeam();
+        for (User user : team.getMembers()) {
+            leaveRequests.addAll(employeeLeaveRepository.findAllByUser_Id(user.getId()));
+        }
+        return leaveRequests;
     }
 }

@@ -83,4 +83,10 @@ public class OrganizationalUnitController {
         java.util.Set<Team> teams = organizationalUnitService.getTeamsOfOrganizationalUnit(organizationalUnitId);
         return new ResponseEntity<>(teams, HttpStatus.OK);
     }
+
+    @PutMapping("/admin/update/{id}")
+    public ResponseEntity<OrganizationalUnit> updateOrganizationalUnit(@PathVariable Long id, @RequestBody OrganizationalUnitRequest request) {
+        OrganizationalUnit updatedOrganizationalUnit = organizationalUnitService.updateOrganizationalUnit(id,request);
+        return new ResponseEntity<>(updatedOrganizationalUnit, HttpStatus.OK);
+    }
 }

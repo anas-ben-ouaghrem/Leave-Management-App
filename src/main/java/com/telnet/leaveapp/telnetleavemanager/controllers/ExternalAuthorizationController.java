@@ -55,6 +55,22 @@ public class ExternalAuthorizationController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @GetMapping("/manager/get-by-manager/{currentUserEmail}")
+    public ResponseEntity<List<ExternalAuthorization>> getExternalAuthorizationsByManager(@PathVariable String currentUserEmail) {
+        List<ExternalAuthorization> authorizations = externalAuthorizationService.getExternalAuthorizationsByTeamManager(currentUserEmail);
+        return new ResponseEntity<>(authorizations, HttpStatus.OK);
+    }
 
+    @GetMapping("/user/get-by-user/{currentUserEmail}")
+    public ResponseEntity<List<ExternalAuthorization>> getExternalAuthorizationsByUser(@PathVariable String currentUserEmail) {
+        List<ExternalAuthorization> authorizations = externalAuthorizationService.getExternalAuthorizationsByUser(currentUserEmail);
+        return new ResponseEntity<>(authorizations, HttpStatus.OK);
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<ExternalAuthorization> updateExternalAuthorization(@PathVariable Long id, @RequestBody ExternalAuthorizationRequest request) {
+        ExternalAuthorization updatedAuthorization = externalAuthorizationService.updateExternalAuthorization(id,request);
+        return new ResponseEntity<>(updatedAuthorization, HttpStatus.OK);
+    }
 
 }

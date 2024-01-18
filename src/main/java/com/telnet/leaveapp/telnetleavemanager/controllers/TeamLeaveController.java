@@ -67,9 +67,15 @@ public class TeamLeaveController {
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
-    @PutMapping("/management/update/{teamLeaveId}")
+    @PutMapping("/management/update/employee/{teamLeaveId}")
     public ResponseEntity<TeamLeave> updateTeamLeaveRequest(@PathVariable Long teamLeaveId) {
         TeamLeave teamLeave = teamLeaveService.updateLeaveRequestEmployee(teamLeaveId);
+        return new ResponseEntity<>(teamLeave, HttpStatus.OK);
+    }
+
+    @PutMapping("/management/update/{teamLeaveId}")
+    public ResponseEntity<TeamLeave> updateTeamLeave(@PathVariable Long teamLeaveId, @RequestBody TeamLeaveRequest request) {
+        TeamLeave teamLeave = teamLeaveService.updateTeamLeave(teamLeaveId, request);
         return new ResponseEntity<>(teamLeave, HttpStatus.OK);
     }
 

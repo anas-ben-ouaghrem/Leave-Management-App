@@ -82,12 +82,43 @@ public class TeamService {
 
     public void deleteTeamByName(String name) {
         Team team = teamRepository.findByName(name)
-                        .orElseThrow(()-> new RuntimeException("Team not found"));
+                        .orElseThrow(()-> new RuntimeException("Team with name " + name + "not found"));
         teamRepository.delete(team);
     }
     public List<User> getMembersOfTeam(Integer teamId) {
         Team team = getTeamById(teamId);
         return team != null ? team.getMembers() : new ArrayList<>();
+    }
+
+    public void updateTeam(Integer teamId, TeamRequest request) {
+        Team team = teamRepository.findById(teamId).orElseThrow(() -> new RuntimeException("Team not found"));
+        User manager = userRepository.findByEmail(request.getTeamLeadEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (manager.getRole() == Role.USER ) {
+            throw new IllegalStateException("User set for manager is not a manager nor an admin");
+        }
+
+        List<User> members = new ArrayList<>();
+        if(request.getTeamMembersEmails() != null) {
+            members =  Arrays.stream(request.getTeamMembersEmails())
+                    .map(userRepository::findByEmail)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .toList();
+        }
+
+        OrganizationalUnit organizationalUnit = null;
+        if (request.getOrganizationalUnitName() != null) {
+            organizationalUnit = organizationalUnitRepository.findByUnitName(request.getOrganizationalUnitName())
+                    .orElseThrow(() -> new RuntimeException("Organizational Unit Not Found!"));
+        }
+
+        team.setName(request.getName());
+        team.setDescription(request.getDescription());
+        team.setManager(manager);
+        team.setMembers(members);
+        team.setOrganizationalUnit(organizationalUnit);
+        teamRepository.save(team);
     }
 }
 

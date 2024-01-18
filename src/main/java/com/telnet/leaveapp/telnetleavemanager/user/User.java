@@ -3,10 +3,7 @@ package com.telnet.leaveapp.telnetleavemanager.user;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import com.telnet.leaveapp.telnetleavemanager.entities.EmployeeLeave;
-import com.telnet.leaveapp.telnetleavemanager.entities.OrganizationalUnit;
-import com.telnet.leaveapp.telnetleavemanager.entities.Team;
-import com.telnet.leaveapp.telnetleavemanager.entities.Token;
+import com.telnet.leaveapp.telnetleavemanager.entities.*;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
@@ -67,6 +64,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Token> tokens;
 
+//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+//    private List<ExternalAuthorization> externalAuthorizations;
+//
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

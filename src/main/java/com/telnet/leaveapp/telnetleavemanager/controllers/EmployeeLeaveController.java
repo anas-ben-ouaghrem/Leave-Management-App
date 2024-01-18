@@ -23,7 +23,7 @@ public class EmployeeLeaveController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @PostMapping("/manager/treat/")
+    @PostMapping("/manager/treat")
     public ResponseEntity<EmployeeLeave> treatLeaveRequest(
             @RequestParam String currentUserEmail,
             @RequestParam Long leaveRequestId,
@@ -60,6 +60,12 @@ public class EmployeeLeaveController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<EmployeeLeave>> getLeaveRequestsByUserId(@PathVariable Integer userId) {
         List<EmployeeLeave> leaveRequests = employeeLeaveService.getLeaveRequestsByUserId(userId);
+        return new ResponseEntity<>(leaveRequests, HttpStatus.OK);
+    }
+
+    @GetMapping("/manager/{managerEmail}")
+    public ResponseEntity<List<EmployeeLeave>> getLeaveRequestsByManagerEmail(@PathVariable String managerEmail) {
+        List<EmployeeLeave> leaveRequests = employeeLeaveService.getLeaveRequestsByManager(managerEmail);
         return new ResponseEntity<>(leaveRequests, HttpStatus.OK);
     }
 
