@@ -33,6 +33,7 @@ public class Team {
     private List<User> members;
 
     @ManyToOne
+    @JsonBackReference
     //@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
     @JoinColumn(name = "organizational_unit_id",nullable = true)
     private OrganizationalUnit organizationalUnit;

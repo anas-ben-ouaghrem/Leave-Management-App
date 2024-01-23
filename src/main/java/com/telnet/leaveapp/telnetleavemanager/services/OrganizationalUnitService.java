@@ -133,7 +133,8 @@ public class OrganizationalUnitService {
         OrganizationalUnit organizationalUnit = getOrganizationalUnitById(organizationalUnitId);
 
         if (organizationalUnit != null) {
-            User member = userRepository.findByEmail(memberEmail).orElseThrow(() -> new RuntimeException("User not found"));
+            User member = userRepository.findByEmail(memberEmail)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
             Set<User> members = organizationalUnit.getMembers();
 
             // Avoiding cyclic dependency
