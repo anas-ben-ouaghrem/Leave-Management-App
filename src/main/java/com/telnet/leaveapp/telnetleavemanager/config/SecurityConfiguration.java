@@ -44,6 +44,9 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers(
                                 "/api/v1/auth/**",
+                                "/api/v1/auth/verify",
+                                "/api/v1/users/forgot-password",
+                                "/api/v1/users/reset-forgotten-password",
                                 "v2/api-docs",
                                 "v3/api-docs",
                                 "/v3/api-docs/**",

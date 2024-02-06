@@ -20,5 +20,6 @@ public class RegisterRequest {
     private String password;
     private Role role;
     private String phone;
-    private boolean mfaEnabled;
+    @Builder.Default
+    private boolean mfaEnabled = false;
 }

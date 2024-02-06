@@ -5,8 +5,10 @@ import com.telnet.leaveapp.telnetleavemanager.auth.RegisterRequest;
 import com.telnet.leaveapp.telnetleavemanager.auth.TwoFactorAuthenticationService;
 import com.telnet.leaveapp.telnetleavemanager.config.JwtService;
 import com.telnet.leaveapp.telnetleavemanager.entities.Team;
+import com.telnet.leaveapp.telnetleavemanager.exceptions.UnauthorizedActionException;
 import com.telnet.leaveapp.telnetleavemanager.repositories.TeamRepository;
 import com.telnet.leaveapp.telnetleavemanager.services.MailingService;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -45,11 +47,16 @@ public class UserService {
         var jwtToken = jwtService.generateToken(user);
         jwtService.generateRefreshToken(user);
         authenticationService.saveUserToken(jwtToken, savedUser);
-        this.mailingService.sendMail(savedUser.getEmail(), "Account created", "Your account has been created\n You may now login to the application");
+        this.mailingService.sendMail(savedUser.getEmail(), "Account created", "Your account has been created\n You may now login to the application with the following credentials: \n Email: " + savedUser.getEmail() + "\n Password: " + request.getPassword());
     }
 
     public User getUserByEmail(String email) {
         return repository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    public User getUserById(Long id) {
+        return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
@@ -58,17 +65,23 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         User targetUser = repository.findByEmail(targetUserEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        if (currentUser.getRole() != Role.ADMIN || currentUser != targetUser.getTeam().getManager() || currentUser != targetUser.getOrganizationalUnit().getManager() || currentUser != targetUser) {
-            throw new RuntimeException("You are not authorized to update this user");
-        }
-        currentUser.setPhone(request.getPhone() != null ? request.getPhone() : currentUser.getPhone());
-        currentUser.setFirstName(request.getFirstname() != null ? request.getFirstname() : currentUser.getFirstName());
-        currentUser.setLastName(request.getLastname() != null ? request.getLastname() : currentUser.getLastName());
-        currentUser.setEmail(request.getEmail() != null ? request.getEmail() : currentUser.getEmail());
-        currentUser.setRole(request.getRole() != null ? request.getRole() : currentUser.getRole());
-        currentUser.setMfaEnabled(request.isMfaEnabled());
+        if (currentUser.getRole() != Role.ADMIN ) {
+            if (targetUser.getTeam() != null) {
+                if (currentUser != targetUser.getTeam().getManager() || currentUser != targetUser.getOrganizationalUnit().getManager() || currentUser != targetUser) {
+                    throw new UnauthorizedActionException("You are not authorized to update this user");
+                }
 
-        this.mailingService.sendMail(currentUser.getEmail(), "Account updated", "Your account has been updated\n Please contact your administrator if you did not perform this action");
+            }
+        }
+
+        targetUser.setPhone(request.getPhone() != null ? request.getPhone() : targetUser.getPhone());
+        targetUser.setFirstName(request.getFirstname() != null ? request.getFirstname() : targetUser.getFirstName());
+        targetUser.setLastName(request.getLastname() != null ? request.getLastname() : targetUser.getLastName());
+        targetUser.setEmail(request.getEmail() != null ? request.getEmail() : targetUser.getEmail());
+        targetUser.setRole(request.getRole() != null ? request.getRole() : targetUser.getRole());
+        targetUser.setMfaEnabled(request.isMfaEnabled());
+
+        this.mailingService.sendMail(targetUser.getEmail(), "Account updated", "Your account has been updated\n Please contact your administrator if you did not perform this action");
 
         return repository.save(targetUser);
     }
@@ -84,9 +97,13 @@ public class UserService {
         return repository.findAll();
     }
 
-    public void resetPassword(String email, String newPassword) {
+    public void resetPassword(String email,String oldPassword, String newPassword) {
         User user = repository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new RuntimeException("Wrong password");
+        }
 
         String encodedPassword = passwordEncoder.encode(newPassword);
         user.setPassword(encodedPassword);
@@ -128,5 +145,73 @@ public class UserService {
             repository.save(user);
             this.mailingService.sendMail(user.getEmail(), "Annual leaves reset", "Your annual leaves have been reset");
         }
+    }
+
+    @Scheduled(cron = "0 0 1 * * ?")
+    public void resetExternalActivities() {
+        List<User> users = repository.findAll();
+        for (User user : users) {
+            user.setExternalActivitiesLimit(2);
+            repository.save(user);
+            this.mailingService.sendMail(user.getEmail(), "External activities reset", "Your external activities have been reset");
+        }
+    }
+
+
+    public void deleteUserById(Long id) {
+        User userToBeDeleted = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+        repository.delete(userToBeDeleted);
+        this.mailingService.sendMail(userToBeDeleted.getEmail(), "Account deleted", "Your account has been deleted\n Please contact your administrator if you did not perform this action");
+    }
+
+    // FORGOT PASSWORD
+
+    public void sendPasswordResetEmail(String userEmail) {
+        User user = repository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Generate a password reset token and include it in the email
+        String resetToken = jwtService.generatePasswordResetToken(user);
+
+        // Construct the password reset URL with the JWT token
+        String resetUrl = "http://localhost:4200/pages/authentication/reset-password-v2?token=" + resetToken;
+
+        // Send the email with the password reset link
+        String subject = "Password Reset Request";
+        String body = "To reset your password, click the link below:\n\n" + resetUrl;
+        mailingService.sendMail(userEmail, subject, body);
+    }
+
+    public void resetPasswordWithToken(String token, String newPassword) {
+        Claims claims = jwtService.extractAllClaims(token);
+
+        // Extract user information from the token
+        String email = claims.getSubject();
+        Long userId = claims.get("id", Long.class);
+
+        // Retrieve user from the database
+        User user = repository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Validate the token and email
+        if (!jwtService.isPasswordResetTokenValid(token, user) || !email.equals(user.getEmail())) {
+            throw new RuntimeException("Invalid password reset token");
+        }
+
+        // Perform password reset logic
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedPassword);
+
+        // Generate a new JWT token after password reset
+        String newJwtToken = jwtService.generateToken(user);
+        authenticationService.revokeAllUserTokens(user);
+        authenticationService.saveUserToken(newJwtToken, user);
+
+        // Save the updated user entity
+        repository.save(user);
+
+        // Send email notification about password reset
+        this.mailingService.sendMail(email, "Password Reset", "Your password has been reset successfully");
     }
 }

@@ -84,7 +84,7 @@ public class EmployeeLeaveService {
 
         User userRequestingLeave = leaveRequest.getUser();
 
-        if ( currentUser.getRole() != Role.ADMIN) {
+        if ( currentUser.getRole() == Role.USER ) {
             throw new IllegalStateException("You are not authorized to treat this leave request.");
         }
 
@@ -106,7 +106,7 @@ public class EmployeeLeaveService {
         } else {
             throw new IllegalArgumentException("Invalid status provided.");
         }
-        this.mailingService.sendMail(userRequestingLeave.getEmail(),"Leave request treated", "Your leave request with id: " + leaveRequestId + " has been " + status);
+        //this.mailingService.sendMail(userRequestingLeave.getEmail(),"Leave request treated", "Your leave request with id: " + leaveRequestId + " has been " + status);
         return employeeLeaveRepository.save(leaveRequest);
     }
 

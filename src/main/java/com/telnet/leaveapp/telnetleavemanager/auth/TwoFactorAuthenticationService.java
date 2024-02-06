@@ -24,7 +24,7 @@ public class TwoFactorAuthenticationService {
         QrData data = new QrData.Builder()
                 .label("MFA Security")
                 .secret(secret)
-                .issuer("Anas Ben Ouaghrem")
+                .issuer("Ines Lachiheb")
                 .algorithm(HashingAlgorithm.SHA1)
                 .digits(6)
                 .period(30)

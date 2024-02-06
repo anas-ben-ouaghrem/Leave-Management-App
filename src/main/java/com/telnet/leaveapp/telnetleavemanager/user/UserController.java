@@ -47,6 +47,12 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @GetMapping("/id/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        User user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
+    }
+
     @PutMapping("/update")
     public ResponseEntity<User> updateUser(@RequestParam String currentUserEmail, @RequestParam String targetUserEmail, @RequestBody RegisterRequest request) {
         User updatedUser = userService.updateUser(currentUserEmail, targetUserEmail, request);
@@ -56,6 +62,12 @@ public class UserController {
     @DeleteMapping("/admin/{email}")
     public ResponseEntity<Void> deleteUserByEmail(@PathVariable String email) {
         userService.deleteUser(email);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/admin/id/{id}")
+    public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
+        userService.deleteUserById(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -86,12 +98,33 @@ public class UserController {
     }
 
     @PostMapping("/reset")
-    public ResponseEntity<String> resetPassword(@RequestParam("email") String email, @RequestParam("newPassword") String newPassword) {
+    public ResponseEntity<String> resetPassword(@RequestParam("email") String email, @RequestParam("oldPassword") String oldPassword ,@RequestParam("newPassword") String newPassword) {
         try {
-            userService.resetPassword(email, newPassword);
+            userService.resetPassword(email,oldPassword, newPassword);
             return ResponseEntity.ok("Password reset successfully.");
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        }
+    }
+
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> requestPasswordReset(@RequestParam("email") String email) {
+        try {
+            userService.sendPasswordResetEmail(email);
+            return ResponseEntity.ok("Password reset email sent successfully.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found." + e.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-forgotten-password")
+    public ResponseEntity<String> confirmPasswordReset(@RequestParam("token") String token, @RequestParam("newPassword") String newPassword) {
+        try {
+            userService.resetPasswordWithToken(token, newPassword);
+            return ResponseEntity.ok("Password reset successfully.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired reset token.");
         }
     }
 }

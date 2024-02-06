@@ -26,6 +26,8 @@ public class JwtService {
     private long jwtExpiration;
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
+    @Value("${application.security.jwt.reset-token.expiration}")
+    private long resetTokenExpiration;
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -84,7 +86,7 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         return Jwts
                 .parserBuilder()
                 .setSigningKey(getSignInKey())
@@ -98,4 +100,19 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyByes);
     }
 
+
+
+    public String generatePasswordResetToken(User userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        // Add any additional claims if needed
+
+        return buildToken(claims, userDetails, resetTokenExpiration);
+    }
+
+    public boolean isPasswordResetTokenValid(String token, User userDetails) {
+        // For password reset tokens, you might not need to compare the username
+        // Instead, you can check if the token is not expired and matches the user's email
+        final String email = extractClaim(token, Claims::getSubject);
+        return (email.equals(userDetails.getEmail()) && !isTokenExpired(token));
+    }
 }
