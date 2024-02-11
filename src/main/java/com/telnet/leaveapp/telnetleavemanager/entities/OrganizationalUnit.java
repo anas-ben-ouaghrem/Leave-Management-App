@@ -15,14 +15,17 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = "unit_name"))
 
 public class OrganizationalUnit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private LocalDateTime createdAt;
-    private String unitName;
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "unit_name", unique = true)
+    private String name;
 
     @OneToMany(mappedBy = "organizationalUnit", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = false)
     @JsonManagedReference

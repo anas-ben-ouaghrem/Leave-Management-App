@@ -47,6 +47,12 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @GetMapping("/manager/get-users")
+    public ResponseEntity<List<User>> getUserByEmailForManager(@RequestParam String email) {
+        List<User> users = userService.getUsersByManager(email);
+        return ResponseEntity.status(HttpStatus.OK).body(users);
+    }
+
     @GetMapping("/id/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         User user = userService.getUserById(id);

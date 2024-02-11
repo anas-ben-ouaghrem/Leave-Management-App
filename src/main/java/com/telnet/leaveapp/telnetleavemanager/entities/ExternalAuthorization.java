@@ -28,6 +28,7 @@ public class ExternalAuthorization {
     private LocalDateTime endDate;
     @Enumerated(EnumType.STRING)
     private Status status;
+    private String reason;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

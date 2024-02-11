@@ -10,7 +10,7 @@ import java.util.List;
 @Builder
 public class OrganizationalUnitRequest {
 
-    private String unitName;
+    private String name;
 
     @Builder.Default
     private List<String> teamNames = new ArrayList<>();

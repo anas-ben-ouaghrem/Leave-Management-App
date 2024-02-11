@@ -25,7 +25,7 @@ public class TwoFactorAuthenticationService {
                 .label("MFA Security")
                 .secret(secret)
                 .issuer("Ines Lachiheb")
-                .algorithm(HashingAlgorithm.SHA1)
+                .algorithm(HashingAlgorithm.SHA256)
                 .digits(6)
                 .period(30)
                 .build();

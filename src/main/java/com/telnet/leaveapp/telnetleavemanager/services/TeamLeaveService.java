@@ -29,7 +29,7 @@ public class TeamLeaveService {
 
     public TeamLeave createTeamLeave(String currentUserEmail, TeamLeaveRequest request) {
 
-        Team team = teamRepository.findByName(request.getTeamName())
+        Team team = teamRepository.findByName(request.getName())
                 .orElseThrow(() -> new RuntimeException("Team not found"));
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("User not Found"));

@@ -44,7 +44,7 @@ public class TeamService {
 
         OrganizationalUnit organizationalUnit = null;
         if (request.getOrganizationalUnitName() != null) {
-            organizationalUnit = organizationalUnitRepository.findByUnitName(request.getOrganizationalUnitName())
+            organizationalUnit = organizationalUnitRepository.findByName(request.getOrganizationalUnitName())
                     .orElseThrow(() -> new RuntimeException("Organizational Unit Not Found!"));
         }
 
@@ -109,7 +109,7 @@ public class TeamService {
 
         OrganizationalUnit organizationalUnit = null;
         if (request.getOrganizationalUnitName() != null) {
-            organizationalUnit = organizationalUnitRepository.findByUnitName(request.getOrganizationalUnitName())
+            organizationalUnit = organizationalUnitRepository.findByName(request.getOrganizationalUnitName())
                     .orElseThrow(() -> new RuntimeException("Organizational Unit Not Found!"));
         }
 

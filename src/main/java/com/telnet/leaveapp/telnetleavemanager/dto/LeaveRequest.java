@@ -23,4 +23,5 @@ public class LeaveRequest {
     @Nullable
     @Builder.Default
     private LocalDateTime endDate = LocalDateTime.now();
+    private String reason;
 }

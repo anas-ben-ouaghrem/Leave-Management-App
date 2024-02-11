@@ -37,7 +37,7 @@ public class OrganizationalUnitService {
         }
 
         OrganizationalUnit organizationalUnit = new OrganizationalUnit();
-        organizationalUnit.setUnitName(request.getUnitName());
+        organizationalUnit.setName(request.getName());
         organizationalUnit.setManager(userRepository.findByEmail(request.getManagerEmail()).orElseThrow(() -> new RuntimeException("User not found")));
         if(request.getTeamNames() != null) {
             organizationalUnit.setTeams(request.getTeamNames().stream()
@@ -73,7 +73,7 @@ public class OrganizationalUnitService {
     }
 
     public OrganizationalUnit getOrganizationalUnitByName(String unitName) {
-        return organizationalUnitRepository.findByUnitName(unitName).orElseThrow(() -> new RuntimeException("Organizational unit not found"));
+        return organizationalUnitRepository.findByName(unitName).orElseThrow(() -> new RuntimeException("Organizational unit not found"));
     }
     public Set<Team> getTeamsOfOrganizationalUnit(Long organizationalUnitId) {
         OrganizationalUnit organizationalUnit = getOrganizationalUnitById(organizationalUnitId);
@@ -95,10 +95,14 @@ public class OrganizationalUnitService {
             teamRepository.saveAndFlush(team);
             organizationalUnitRepository.saveAndFlush(organizationalUnit);
             log.info("Team " + teamName + " added to organizational unit");
-            for(User member : team.getMembers()) {
-                mailingService.sendMail(member.getEmail(), "Team added to organizational unit", "The team " + teamName + " has been added to the organizational unit " + organizationalUnit.getUnitName());
+            if (team.getMembers() != null) {
+                for(User member : team.getMembers()) {
+                    organizationalUnit.getMembers().add(member);
+                    mailingService.sendMail(member.getEmail(), "Team added to organizational unit", "The team " + teamName + " has been added to the organizational unit " + organizationalUnit.getName());
+                }
             }
-            this.mailingService.sendMail(organizationalUnit.getManager().getEmail(), "Team added to organizational unit", "The team " + teamName + " has been added to the organizational unit " + organizationalUnit.getUnitName());
+
+            this.mailingService.sendMail(organizationalUnit.getManager().getEmail(), "Team added to organizational unit", "The team " + teamName + " has been added to the organizational unit " + organizationalUnit.getName());
         }
     }
 
@@ -113,9 +117,9 @@ public class OrganizationalUnitService {
             organizationalUnitRepository.saveAndFlush(organizationalUnit);
             log.info("Team " + teamName + " removed from organizational unit");
             for(User member : team.getMembers()) {
-                mailingService.sendMail(member.getEmail(), "Team removed from organizational unit", "The team " + teamName + " has been removed from the organizational unit " + organizationalUnit.getUnitName());
+                mailingService.sendMail(member.getEmail(), "Team removed from organizational unit", "The team " + teamName + " has been removed from the organizational unit " + organizationalUnit.getName());
             }
-            this.mailingService.sendMail(organizationalUnit.getManager().getEmail(), "Team removed from organizational unit", "The team " + teamName + " has been removed from the organizational unit " + organizationalUnit.getUnitName());
+            this.mailingService.sendMail(organizationalUnit.getManager().getEmail(), "Team removed from organizational unit", "The team " + teamName + " has been removed from the organizational unit " + organizationalUnit.getName());
         }
     }
 
@@ -124,7 +128,7 @@ public class OrganizationalUnitService {
         if (organizationalUnit != null) {
             organizationalUnit.setManager(manager);
             organizationalUnitRepository.save(organizationalUnit);
-            this.mailingService.sendMail(manager.getEmail(), "You are now manager of an organizational unit", "You are now manager of the organizational unit " + organizationalUnit.getUnitName());
+            this.mailingService.sendMail(manager.getEmail(), "You are now manager of an organizational unit", "You are now manager of the organizational unit " + organizationalUnit.getName());
         }
     }
 
@@ -145,7 +149,7 @@ public class OrganizationalUnitService {
                 organizationalUnit.setMembers(members);
                 organizationalUnitRepository.saveAndFlush(organizationalUnit);
                 log.info("Member " + memberEmail + " added to organizational unit");
-                this.mailingService.sendMail(member.getEmail(), "You are now member of the " + organizationalUnit.getUnitName() + " organizational unit", "You are now member of the organizational unit " + organizationalUnit.getUnitName());
+                this.mailingService.sendMail(member.getEmail(), "You are now member of the " + organizationalUnit.getName() + " organizational unit", "You are now member of the organizational unit " + organizationalUnit.getName());
             }
         }
     }
@@ -165,7 +169,7 @@ public class OrganizationalUnitService {
                 organizationalUnit.setMembers(members);
                 organizationalUnitRepository.saveAndFlush(organizationalUnit);
                 log.info("Member " + memberEmail + " removed from organizational unit");
-                this.mailingService.sendMail(member.getEmail(), "You are no longer member of the " + organizationalUnit.getUnitName() + " organizational unit", "You are no longer member of the organizational unit " + organizationalUnit.getUnitName());
+                this.mailingService.sendMail(member.getEmail(), "You are no longer member of the " + organizationalUnit.getName() + " organizational unit", "You are no longer member of the organizational unit " + organizationalUnit.getName());
             }
         }
     }
@@ -173,7 +177,7 @@ public class OrganizationalUnitService {
     public OrganizationalUnit updateOrganizationalUnit(Long organizationalUnitId, OrganizationalUnitRequest request) {
         OrganizationalUnit organizationalUnit = getOrganizationalUnitById(organizationalUnitId);
         if (organizationalUnit != null) {
-            organizationalUnit.setUnitName(request.getUnitName());
+            organizationalUnit.setName(request.getName());
             organizationalUnit.setManager(userRepository.findByEmail(request.getManagerEmail()).orElseThrow(() -> new RuntimeException("User not found")));
             if(request.getTeamNames() != null) {
                 organizationalUnit.setTeams(request.getTeamNames().stream()

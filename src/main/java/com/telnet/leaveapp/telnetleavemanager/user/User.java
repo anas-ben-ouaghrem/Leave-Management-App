@@ -27,8 +27,11 @@ public class User implements UserDetails {
 
     private String firstName;
     private String lastName;
+    @Column(unique = true, nullable = false)
     private String email;
-    private Gender gender;
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private Gender gender = Gender.MALE;
     @JsonIgnore
     private String password;
     private String phone;
@@ -43,7 +46,8 @@ public class User implements UserDetails {
     private int externalActivitiesLimit = 2;
     @Enumerated(EnumType.STRING)
     private Role role;
-    private boolean mfaEnabled;
+    @Builder.Default
+    private boolean mfaEnabled = false;
     private String secret;
 
     @ManyToOne

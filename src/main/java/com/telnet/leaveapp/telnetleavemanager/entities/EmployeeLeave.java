@@ -40,6 +40,7 @@ public class EmployeeLeave {
     private LocalDateTime createdAt;
     @Enumerated(EnumType.STRING)
     private Status status;
+    private String reason;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

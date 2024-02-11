@@ -102,7 +102,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new RuntimeException("Wrong password");
+            throw new IllegalArgumentException("Wrong password");
         }
 
         String encodedPassword = passwordEncoder.encode(newPassword);
@@ -196,7 +196,7 @@ public class UserService {
 
         // Validate the token and email
         if (!jwtService.isPasswordResetTokenValid(token, user) || !email.equals(user.getEmail())) {
-            throw new RuntimeException("Invalid password reset token");
+            throw new IllegalStateException("Invalid password reset token");
         }
 
         // Perform password reset logic
@@ -213,5 +213,16 @@ public class UserService {
 
         // Send email notification about password reset
         this.mailingService.sendMail(email, "Password Reset", "Your password has been reset successfully");
+    }
+
+    public List<User> getUsersByManager(String managerEmail) {
+        try {
+            User manager = repository.findByEmail(managerEmail)
+                    .orElseThrow(() -> new RuntimeException("Manager not found"));
+            Team team = manager.getTeam();
+            return team.getMembers();
+        } catch (Exception e) {
+            throw new IllegalStateException("User not found");
+        }
     }
 }

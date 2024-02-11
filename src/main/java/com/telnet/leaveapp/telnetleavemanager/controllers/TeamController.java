@@ -24,12 +24,12 @@ public class TeamController {
     private final OrganizationalUnitRepository organizationalUnitRepository;
 
     @PostMapping("/management/create")
-    public ResponseEntity<?> createTeam(
-            TeamRequest request
+    public ResponseEntity<String> createTeam(
+            @RequestBody TeamRequest request
     ) {
         //try {
             teamService.createTeam(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Team Created Successfully");
+            return new ResponseEntity<>("Team Created Successfully", HttpStatus.CREATED);
 //        } catch (RuntimeException e) {
 //            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while creating team");
 //        }
@@ -78,7 +78,7 @@ public class TeamController {
     }
 
     @PutMapping("/management/update/{teamId}")
-    public ResponseEntity<?> updateTeam(@PathVariable Integer teamId, TeamRequest request) {
+    public ResponseEntity<String> updateTeam(@PathVariable Integer teamId, TeamRequest request) {
         teamService.updateTeam(teamId, request);
         return ResponseEntity.status(HttpStatus.OK).body("Team Updated Successfully");
     }

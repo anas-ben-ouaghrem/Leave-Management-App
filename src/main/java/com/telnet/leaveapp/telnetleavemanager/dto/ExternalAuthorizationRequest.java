@@ -13,4 +13,5 @@ public class ExternalAuthorizationRequest {
     private LeaveDuration leaveDuration;
     private LocalDateTime date;
     private String userEmail;
+    private String reason;
 }

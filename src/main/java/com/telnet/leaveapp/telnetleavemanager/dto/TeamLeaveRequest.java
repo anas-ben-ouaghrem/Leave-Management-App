@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Builder
 public class TeamLeaveRequest {
 
-    private String teamName;
+    private String name;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private String reason;

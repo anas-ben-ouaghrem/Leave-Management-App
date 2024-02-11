@@ -22,7 +22,8 @@ public class TeamLeave {
     private LocalDateTime endDate;
     private String reason;
     private Status status;
-    private LocalDateTime createdAt;
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
     @ManyToOne
     private Team team;
 }
