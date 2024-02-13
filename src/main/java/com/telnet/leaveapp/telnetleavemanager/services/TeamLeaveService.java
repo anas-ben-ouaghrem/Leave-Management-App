@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +35,7 @@ public class TeamLeaveService {
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("User not Found"));
 
-        if (currentUser.getRole() != Role.ADMIN || currentUser != team.getManager()) {
+        if (currentUser.getRole() == Role.USER ) {
             throw new UnauthorizedActionException("You are unauthorized to create team leave requests for this team");
         }
 

@@ -32,7 +32,7 @@ public class UserController {
             }
     )
     @PostMapping("/admin/addUser")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request) {
+    public ResponseEntity<String> registerUser(@RequestBody RegisterRequest request) {
         try {
             userService.addUser(request);
             return ResponseEntity.status(HttpStatus.CREATED).body("User Added Successfully");

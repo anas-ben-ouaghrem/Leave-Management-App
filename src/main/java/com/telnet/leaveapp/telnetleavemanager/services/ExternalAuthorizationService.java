@@ -40,29 +40,30 @@ public class ExternalAuthorizationService {
         }
 
         if (user.getExternalActivitiesLimit() <= 0) {
-            throw new InsufficientAuthorizationBalanceException("You have reached the limit of external activities");
+            throw new InsufficientAuthorizationBalanceException("You have reached the limit of Exit Permissions");
         }
 
         ExternalAuthorization externalAuthorization = ExternalAuthorization.builder()
                 .leaveDuration(request.getLeaveDuration())
+                .reason(request.getReason())
                 .startDate(request.getDate())
                 .endDate(request.getDate().plusMinutes(request.getLeaveDuration().getDuration()))
                 .status(Status.PENDING)
                 .createdAt(LocalDateTime.now())
                 .user(user)
                 .build();
-        this.mailingService.sendMail(user.getEmail(),"External Authorization request created", "Your external authorization request has been created");
+        this.mailingService.sendMail(user.getEmail(),"Exit Permissions request created", "Your Exit Permissions request has been created");
         return externalAuthorizationRepository.save(externalAuthorization);
     }
 
     public void treatExternalAuthorization(Long id, Status status, String currentUserEmail) {
         ExternalAuthorization externalAuthorization = externalAuthorizationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("External authorization not found"));
+                .orElseThrow(() -> new RuntimeException("Exit Permission not found"));
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (currentUser.getRole() != Role.ADMIN ) {
             if (currentUser != externalAuthorization.getUser().getOrganizationalUnit().getManager() || currentUser != externalAuthorization.getUser().getTeam().getManager()) {
-                throw new UnauthorizedActionException("You are not authorized to treat this external authorization");
+                throw new UnauthorizedActionException("You are not authorized to treat this Exit Permissions");
             }
         }
 
@@ -70,13 +71,13 @@ public class ExternalAuthorizationService {
         if (status == Status.ACCEPTED) {
             user.setExternalActivitiesLimit(user.getExternalActivitiesLimit() - 1);
             userRepository.saveAndFlush(user);
-            log.info("External authorization accepted");
+            log.info("Exit Permissions accepted");
         } else if (status == Status.REJECTED) {
-            log.info("External authorization rejected");
+            log.info("Exit Permissions rejected");
         }
         externalAuthorization.setStatus(status);
         externalAuthorizationRepository.saveAndFlush(externalAuthorization);
-        this.mailingService.sendMail(user.getEmail(),"External Authorization treated", "Your external authorization with id " + id + " has been " + status);
+        this.mailingService.sendMail(user.getEmail(),"Exit Permissions treated", "Your Exit Permissions with id " + id + " has been " + status);
     }
 
     public List<ExternalAuthorization> getAllExternalAuthorizations() {
@@ -84,12 +85,12 @@ public class ExternalAuthorizationService {
     }
 
     public ExternalAuthorization getExternalAuthorizationById(Long id) {
-        return externalAuthorizationRepository.findById(id).orElseThrow(() -> new RuntimeException("External authorization not found"));
+        return externalAuthorizationRepository.findById(id).orElseThrow(() -> new RuntimeException("Exit Permissions not found"));
     }
 
     public void deleteExternalAuthorization(Long id) {
         externalAuthorizationRepository.deleteById(id);
-        log.info("External authorization deleted");
+        log.info("Exit Permissions deleted");
     }
 
     public List<ExternalAuthorization> getExternalAuthorizationsForUser(Integer userId) {
@@ -102,7 +103,7 @@ public class ExternalAuthorizationService {
         for (User user : users) {
             user.setExternalActivitiesLimit(2);
             userRepository.save(user);
-            this.mailingService.sendMail(user.getEmail(), "External authorization limit reset", "Your external authorization limit has been reset");
+            this.mailingService.sendMail(user.getEmail(), "Exit Permissions limit reset", "Your Exit Permissions limit has been reset");
         }
     }
 
@@ -142,9 +143,10 @@ public class ExternalAuthorizationService {
 
     public ExternalAuthorization updateExternalAuthorization(Long id, ExternalAuthorizationRequest request) {
         ExternalAuthorization externalAuthorization = externalAuthorizationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("External authorization not found"));
+                .orElseThrow(() -> new RuntimeException("Exit Permissions not found"));
         externalAuthorization.setLeaveDuration(request.getLeaveDuration());
         externalAuthorization.setStartDate(request.getDate());
+        externalAuthorization.setReason(request.getReason());
         externalAuthorization.setEndDate(request.getDate().plusMinutes(request.getLeaveDuration().getDuration()));
         externalAuthorizationRepository.saveAndFlush(externalAuthorization);
         return externalAuthorization;

@@ -36,7 +36,8 @@ public class OrganizationalUnit {
     @JsonManagedReference
     private Set<User> members;
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.DETACH})
+    @JoinColumn(name = "manager_id", referencedColumnName = "id")
     private User manager;
 
 }

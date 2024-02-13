@@ -78,7 +78,7 @@ public class TeamController {
     }
 
     @PutMapping("/management/update/{teamId}")
-    public ResponseEntity<String> updateTeam(@PathVariable Integer teamId, TeamRequest request) {
+    public ResponseEntity<String> updateTeam(@PathVariable Integer teamId, @RequestBody TeamRequest request) {
         teamService.updateTeam(teamId, request);
         return ResponseEntity.status(HttpStatus.OK).body("Team Updated Successfully");
     }

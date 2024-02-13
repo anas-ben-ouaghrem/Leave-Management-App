@@ -56,7 +56,9 @@ public class TeamService {
                 .createdAt(LocalDateTime.now())
                 .organizationalUnit(organizationalUnit)
                 .build();
-        teamRepository.save(team);
+        teamRepository.saveAndFlush(team);
+        manager.setTeam(team);
+        userRepository.saveAndFlush(manager);
     }
 
     public List<Team> getAllTeams() {
@@ -91,6 +93,7 @@ public class TeamService {
     }
 
     public void updateTeam(Integer teamId, TeamRequest request) {
+        System.out.println(request);
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new RuntimeException("Team not found"));
         User manager = userRepository.findByEmail(request.getTeamLeadEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -118,7 +121,9 @@ public class TeamService {
         team.setManager(manager);
         team.setMembers(members);
         team.setOrganizationalUnit(organizationalUnit);
-        teamRepository.save(team);
+        teamRepository.saveAndFlush(team);
+        manager.setTeam(team);
+        userRepository.saveAndFlush(manager);
     }
 }
 

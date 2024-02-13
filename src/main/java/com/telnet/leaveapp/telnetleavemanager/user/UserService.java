@@ -4,8 +4,10 @@ import com.telnet.leaveapp.telnetleavemanager.auth.AuthenticationService;
 import com.telnet.leaveapp.telnetleavemanager.auth.RegisterRequest;
 import com.telnet.leaveapp.telnetleavemanager.auth.TwoFactorAuthenticationService;
 import com.telnet.leaveapp.telnetleavemanager.config.JwtService;
+import com.telnet.leaveapp.telnetleavemanager.entities.OrganizationalUnit;
 import com.telnet.leaveapp.telnetleavemanager.entities.Team;
 import com.telnet.leaveapp.telnetleavemanager.exceptions.UnauthorizedActionException;
+import com.telnet.leaveapp.telnetleavemanager.repositories.OrganizationalUnitRepository;
 import com.telnet.leaveapp.telnetleavemanager.repositories.TeamRepository;
 import com.telnet.leaveapp.telnetleavemanager.services.MailingService;
 import io.jsonwebtoken.Claims;
@@ -25,6 +27,7 @@ public class UserService {
     private final UserRepository repository;
     private final TeamRepository teamRepository;
     private final PasswordEncoder passwordEncoder;
+    private final OrganizationalUnitRepository orgnizationalUnitRepository;
     private final JwtService jwtService;
     private final TwoFactorAuthenticationService tfaService;
     private final AuthenticationService authenticationService;
@@ -89,6 +92,10 @@ public class UserService {
     public void deleteUser(String email) {
         User userToBeDeleted = repository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
+        OrganizationalUnit orgUnit = this.orgnizationalUnitRepository.findByManager(userToBeDeleted)
+                .orElseThrow(() -> new RuntimeException("Organizational unit with manager " + userToBeDeleted.getFirstName() + " " + userToBeDeleted.getLastName() + " not found"));
+        orgUnit.setManager(null);
+        this.orgnizationalUnitRepository.saveAndFlush(orgUnit);
         repository.delete(userToBeDeleted);
         this.mailingService.sendMail(email, "Account deleted", "Your account has been deleted\n Please contact your administrator if you did not perform this action");
     }

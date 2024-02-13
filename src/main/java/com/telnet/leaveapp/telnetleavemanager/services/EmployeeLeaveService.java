@@ -39,6 +39,7 @@ public class EmployeeLeaveService {
                 .exceptionalLeaveType(leaveRequest.getExceptionalLeaveType())
                 .startDate(leaveRequest.getStartDate())
                 .status(Status.PENDING)
+                .reason(leaveRequest.getReason())
                 .createdAt(LocalDateTime.now())
                 .timeOfDay(leaveRequest.getTimeOfDay() != TimeOfDay.INAPPLICABLE ? leaveRequest.getTimeOfDay() : TimeOfDay.INAPPLICABLE)
                 .build();
@@ -60,6 +61,7 @@ public class EmployeeLeaveService {
 
         employeeLeaveRepository.save(leave);
         this.mailingService.sendMail(user.getEmail(),"Leave request created", "Your leave request has been created");
+        this.mailingService.sendMail(currentUser.getEmail(),"Leave request created", "Leave request for " + user.getEmail() + " has been created");
     }
 
     private void calculateDurationAndSetEndDate(EmployeeLeave leave) {
@@ -106,7 +108,7 @@ public class EmployeeLeaveService {
         } else {
             throw new IllegalArgumentException("Invalid status provided.");
         }
-        //this.mailingService.sendMail(userRequestingLeave.getEmail(),"Leave request treated", "Your leave request with id: " + leaveRequestId + " has been " + status);
+        this.mailingService.sendMail(userRequestingLeave.getEmail(),"Leave request treated", "Your leave request with id: " + leaveRequestId + " has been " + status);
         return employeeLeaveRepository.save(leaveRequest);
     }
 
@@ -141,6 +143,7 @@ public class EmployeeLeaveService {
     }
 
     private EmployeeLeave updateFields(LeaveRequest leaveRequest, EmployeeLeave existingLeaveRequest) {
+        existingLeaveRequest.setReason(leaveRequest.getReason() == null ? existingLeaveRequest.getReason() : leaveRequest.getReason());
         existingLeaveRequest.setLeaveType(leaveRequest.getLeaveType() == null ? existingLeaveRequest.getLeaveType() : leaveRequest.getLeaveType());
         existingLeaveRequest.setExceptionalLeaveType(leaveRequest.getExceptionalLeaveType() == null ? existingLeaveRequest.getExceptionalLeaveType() : leaveRequest.getExceptionalLeaveType());
         existingLeaveRequest.setLeaveType(leaveRequest.getLeaveType() == null ? existingLeaveRequest.getLeaveType() : leaveRequest.getLeaveType());
