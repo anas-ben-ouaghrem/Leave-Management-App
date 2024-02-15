@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -52,9 +53,9 @@ public class OrganizationalUnitService {
         if (request.getMemberEmails() != null) {
             organizationalUnit.setMembers(request.getMemberEmails().stream()
                     .map(memberEmail -> userRepository.findByEmail(memberEmail).orElseThrow(() -> new RuntimeException("User not found")))
-                    .collect(java.util.stream.Collectors.toSet()));
+                    .collect(java.util.stream.Collectors.toList()));
         } else {
-            organizationalUnit.setMembers(new HashSet<>());
+            organizationalUnit.setMembers(new ArrayList<>());
         }
 
         return organizationalUnitRepository.save(organizationalUnit);
@@ -64,6 +65,7 @@ public class OrganizationalUnitService {
         return organizationalUnitRepository.findAll();
     }
 
+    @Transactional
     public OrganizationalUnit getOrganizationalUnitById(Long id) {
         return organizationalUnitRepository.findById(id).orElse(null);
     }
@@ -85,24 +87,46 @@ public class OrganizationalUnitService {
         organizationalUnitRepository.delete(organizationalUnit);
     }
 
+    @Transactional
     public void affectTeamToOrganizationalUnit(Long organizationalUnitId, String teamName) {
         OrganizationalUnit organizationalUnit = getOrganizationalUnitById(organizationalUnitId);
-        if (organizationalUnit != null) {
-            Team team = teamRepository.findByName(teamName).orElseThrow(() -> new RuntimeException("Team not found"));
-            log.info(team.toString());
-            organizationalUnit.getTeams().add(team);
-            team.setOrganizationalUnit(organizationalUnit);
-            teamRepository.saveAndFlush(team);
-            organizationalUnitRepository.saveAndFlush(organizationalUnit);
-            log.info("Team " + teamName + " added to organizational unit");
-            if (team.getMembers() != null) {
-                for(User member : team.getMembers()) {
-                    organizationalUnit.getMembers().add(member);
-                    mailingService.sendMail(member.getEmail(), "Team added to organizational unit", "The team " + teamName + " has been added to the organizational unit " + organizationalUnit.getName());
-                }
-            }
 
-            this.mailingService.sendMail(organizationalUnit.getManager().getEmail(), "Team added to organizational unit", "The team " + teamName + " has been added to the organizational unit " + organizationalUnit.getName());
+        if (organizationalUnit != null) {
+            Team team = teamRepository.findByName(teamName)
+                    .orElseThrow(() -> new RuntimeException("Team not found"));
+
+            log.info(team.toString());
+
+            if (!organizationalUnit.getTeams().contains(team)) {
+                organizationalUnit.getTeams().add(team);
+                team.setOrganizationalUnit(organizationalUnit);
+                teamRepository.saveAndFlush(team);
+                organizationalUnitRepository.save(organizationalUnit);
+                log.info("Team " + teamName + " added to organizational unit");
+
+                if (!team.getMembers().isEmpty()) {
+                    log.info("Team members: " + team.getMembers());
+                    List<User> departmentMembers = organizationalUnit.getMembers();
+                    for (User member : team.getMembers()) {
+                        if (!organizationalUnit.getMembers().contains(member)) {
+                            departmentMembers.add(member);
+                            mailingService.sendMail(member.getEmail(), "Team added to organizational unit",
+                                    "The team " + teamName + " has been added to the organizational unit " +
+                                            organizationalUnit.getName());
+                        }
+                    }
+                    organizationalUnit.setMembers(departmentMembers);
+                    organizationalUnitRepository.saveAndFlush(organizationalUnit);
+                    log.info("TIS WORKING: " + organizationalUnit.getMembers());
+                }
+
+                this.mailingService.sendMail(organizationalUnit.getManager().getEmail(),
+                        "Team added to organizational unit",
+                        "The team " + teamName + " has been added to the organizational unit " +
+                                organizationalUnit.getName());
+            } else {
+                log.warn("Team " + teamName + " is already assigned to the organizational unit");
+            }
         }
     }
 
@@ -139,7 +163,7 @@ public class OrganizationalUnitService {
         if (organizationalUnit != null) {
             User member = userRepository.findByEmail(memberEmail)
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            Set<User> members = organizationalUnit.getMembers();
+            List<User> members = organizationalUnit.getMembers();
 
             // Avoiding cyclic dependency
             if (!members.contains(member)) {
@@ -159,7 +183,7 @@ public class OrganizationalUnitService {
         if (organizationalUnit != null) {
             User member = userRepository.findByEmail(memberEmail)
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            Set<User> members = organizationalUnit.getMembers();
+            List<User> members = organizationalUnit.getMembers();
 
             // Avoiding cyclic dependency
             if (members.contains(member)) {
@@ -192,9 +216,9 @@ public class OrganizationalUnitService {
             if (request.getMemberEmails() != null) {
                 organizationalUnit.setMembers(request.getMemberEmails().stream()
                         .map(memberEmail -> userRepository.findByEmail(memberEmail).orElseThrow(() -> new RuntimeException("User not found")))
-                        .collect(java.util.stream.Collectors.toSet()));
+                        .collect(java.util.stream.Collectors.toList()));
             } else {
-                organizationalUnit.setMembers(new HashSet<>());
+                organizationalUnit.setMembers(new ArrayList<>());
             }
             organizationalUnitRepository.saveAndFlush(organizationalUnit);
         }

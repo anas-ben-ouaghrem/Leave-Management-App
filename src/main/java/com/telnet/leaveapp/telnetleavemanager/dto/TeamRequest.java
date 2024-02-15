@@ -12,4 +12,6 @@ public class TeamRequest {
     private String teamLeadEmail;
     private String[] teamMembersEmails;
     private String organizationalUnitName;
+    @Builder.Default
+    private int minimumAttendance = 10;
 }

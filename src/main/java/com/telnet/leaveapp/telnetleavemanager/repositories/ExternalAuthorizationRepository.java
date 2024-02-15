@@ -1,6 +1,7 @@
 package com.telnet.leaveapp.telnetleavemanager.repositories;
 
 import com.telnet.leaveapp.telnetleavemanager.entities.ExternalAuthorization;
+import com.telnet.leaveapp.telnetleavemanager.entities.Status;
 import com.telnet.leaveapp.telnetleavemanager.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,4 +13,6 @@ public interface ExternalAuthorizationRepository extends JpaRepository<ExternalA
     List<ExternalAuthorization> findByUser_Team_Manager(User manager);
 
     List<ExternalAuthorization> findByUser(User user);
+
+    List<ExternalAuthorization> findByUserAndStatus(User user, Status status);
 }

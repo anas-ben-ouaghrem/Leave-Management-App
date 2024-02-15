@@ -63,6 +63,18 @@ public class TeamLeaveService {
         }
         // Consider additional conditions or business rules for setting the status
         if ("ACCEPTED".equalsIgnoreCase(status)) {
+            // Erase other pending team leave requests from the same team
+            List<TeamLeave> pendingTeamLeaveRequests = teamLeaveRepository
+                    .findByTeamAndStatus(leaveRequest.getTeam(), Status.PENDING);
+
+            for (TeamLeave pendingLeave : pendingTeamLeaveRequests) {
+                if (!pendingLeave.getId().equals(leaveRequestId)) {
+                    // Erase or update status for other pending leave requests
+                    // Here, assuming you want to erase them, you can use your own logic
+                    teamLeaveRepository.delete(pendingLeave);
+                }
+            }
+
             leaveRequest.setStatus(Status.ACCEPTED);
         } else if ("REJECTED".equalsIgnoreCase(status)) {
             leaveRequest.setStatus(Status.REJECTED);

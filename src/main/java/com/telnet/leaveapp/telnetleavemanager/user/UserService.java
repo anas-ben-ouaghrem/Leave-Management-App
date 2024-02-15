@@ -27,7 +27,7 @@ public class UserService {
     private final UserRepository repository;
     private final TeamRepository teamRepository;
     private final PasswordEncoder passwordEncoder;
-    private final OrganizationalUnitRepository orgnizationalUnitRepository;
+    private final OrganizationalUnitRepository organizationalUnitRepository;
     private final JwtService jwtService;
     private final TwoFactorAuthenticationService tfaService;
     private final AuthenticationService authenticationService;
@@ -35,8 +35,8 @@ public class UserService {
 
     public void addUser(RegisterRequest request) {
         var user = User.builder()
-                .firstName(request.getFirstname())
-                .lastName(request.getLastname())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
                 .email(request.getEmail())
                 .phone(request.getPhone())
                 .gender(request.getGender())
@@ -55,12 +55,12 @@ public class UserService {
 
     public User getUserByEmail(String email) {
         return repository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User with given email not found"));
     }
 
     public User getUserById(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User with id:" + id + " not found"));
     }
 
     public User updateUser(String currentUserEmail, String targetUserEmail, RegisterRequest request) {
@@ -78,8 +78,8 @@ public class UserService {
         }
 
         targetUser.setPhone(request.getPhone() != null ? request.getPhone() : targetUser.getPhone());
-        targetUser.setFirstName(request.getFirstname() != null ? request.getFirstname() : targetUser.getFirstName());
-        targetUser.setLastName(request.getLastname() != null ? request.getLastname() : targetUser.getLastName());
+        targetUser.setFirstName(request.getFirstName() != null ? request.getFirstName() : targetUser.getFirstName());
+        targetUser.setLastName(request.getLastName() != null ? request.getLastName() : targetUser.getLastName());
         targetUser.setEmail(request.getEmail() != null ? request.getEmail() : targetUser.getEmail());
         targetUser.setRole(request.getRole() != null ? request.getRole() : targetUser.getRole());
         targetUser.setMfaEnabled(request.isMfaEnabled());
@@ -92,10 +92,10 @@ public class UserService {
     public void deleteUser(String email) {
         User userToBeDeleted = repository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
-        OrganizationalUnit orgUnit = this.orgnizationalUnitRepository.findByManager(userToBeDeleted)
+        OrganizationalUnit orgUnit = this.organizationalUnitRepository.findByManager(userToBeDeleted)
                 .orElseThrow(() -> new RuntimeException("Organizational unit with manager " + userToBeDeleted.getFirstName() + " " + userToBeDeleted.getLastName() + " not found"));
         orgUnit.setManager(null);
-        this.orgnizationalUnitRepository.saveAndFlush(orgUnit);
+        this.organizationalUnitRepository.saveAndFlush(orgUnit);
         repository.delete(userToBeDeleted);
         this.mailingService.sendMail(email, "Account deleted", "Your account has been deleted\n Please contact your administrator if you did not perform this action");
     }
@@ -230,6 +230,19 @@ public class UserService {
             return team.getMembers();
         } catch (Exception e) {
             throw new IllegalStateException("User not found");
+        }
+    }
+
+    @Scheduled(fixedDelay = 60 * 60 * 1000)
+    public void resetOnLeave() {
+        List<User> users = repository.findAll();
+        for (User user : users) {
+            if (user.getReturnDate() != null && user.getReturnDate().isBefore(java.time.LocalDateTime.now())) {
+                user.setOnLeave(false);
+                user.setReturnDate(null);
+                this.mailingService.sendMail(user.getEmail(), "Welcome Back", "Hello " + user.getFirstName() + " " + user.getLastName() + "\n Welcome back to work");
+                repository.saveAndFlush(user);
+            }
         }
     }
 }

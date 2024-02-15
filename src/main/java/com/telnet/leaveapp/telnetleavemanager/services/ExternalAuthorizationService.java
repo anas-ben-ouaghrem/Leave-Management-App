@@ -69,6 +69,16 @@ public class ExternalAuthorizationService {
 
         User user = externalAuthorization.getUser();
         if (status == Status.ACCEPTED) {
+            List<ExternalAuthorization> pendingExitPermissions = externalAuthorizationRepository
+                    .findByUserAndStatus(user, Status.PENDING);
+
+            for (ExternalAuthorization pendingExitPermission : pendingExitPermissions) {
+                if (!pendingExitPermission.getId().equals(id)) {
+                    // Erase or update status for other pending exit permissions
+                    // Here, assuming you want to erase them, you can use your own logic
+                    externalAuthorizationRepository.delete(pendingExitPermission);
+                }
+            }
             user.setExternalActivitiesLimit(user.getExternalActivitiesLimit() - 1);
             userRepository.saveAndFlush(user);
             log.info("Exit Permissions accepted");

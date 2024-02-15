@@ -41,7 +41,7 @@ public class EmployeeLeaveService {
                 .status(Status.PENDING)
                 .reason(leaveRequest.getReason())
                 .createdAt(LocalDateTime.now())
-                .timeOfDay(leaveRequest.getTimeOfDay() != TimeOfDay.INAPPLICABLE ? leaveRequest.getTimeOfDay() : TimeOfDay.INAPPLICABLE)
+                .timeOfDay(leaveRequest.getTimeOfDay())
                 .build();
 
         if (leaveRequest.getLeaveType() == LeaveType.PERSONAL_LEAVE || leaveRequest.getLeaveType() == LeaveType.SICK_LEAVE) {
@@ -97,6 +97,16 @@ public class EmployeeLeaveService {
 
         // Consider additional conditions or business rules for setting the status
         if ("ACCEPTED".equalsIgnoreCase(status)) {
+            List<EmployeeLeave> pendingLeaveRequests = employeeLeaveRepository
+                    .findByUserAndStatus(userRequestingLeave, Status.PENDING);
+
+            for (EmployeeLeave pendingLeave : pendingLeaveRequests) {
+                if (!pendingLeave.getId().equals(leaveRequestId)) {
+                    // Erase or update status for other pending leave requests
+                    // Here, assuming you want to erase them, you can use your own logic
+                    employeeLeaveRepository.delete(pendingLeave);
+                }
+            }
             leaveRequest.setStatus(Status.ACCEPTED);
             userRequestingLeave.setOnLeave(true);
             userRequestingLeave.setReturnDate(leaveRequest.getEndDate());

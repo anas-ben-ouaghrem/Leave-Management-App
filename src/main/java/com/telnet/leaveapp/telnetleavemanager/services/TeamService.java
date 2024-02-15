@@ -49,6 +49,7 @@ public class TeamService {
         }
 
         Team team = Team.builder()
+                .minimumAttendance(request.getMinimumAttendance())
                 .name(request.getName())
                 .description(request.getDescription())
                 .manager(manager)
@@ -115,7 +116,7 @@ public class TeamService {
             organizationalUnit = organizationalUnitRepository.findByName(request.getOrganizationalUnitName())
                     .orElseThrow(() -> new RuntimeException("Organizational Unit Not Found!"));
         }
-
+        team.setMinimumAttendance(request.getMinimumAttendance());
         team.setName(request.getName());
         team.setDescription(request.getDescription());
         team.setManager(manager);
@@ -124,6 +125,12 @@ public class TeamService {
         teamRepository.saveAndFlush(team);
         manager.setTeam(team);
         userRepository.saveAndFlush(manager);
+    }
+
+    public List<Team> getTeamsByManager(String managerEmail) {
+        User manager = userRepository.findByEmail(managerEmail)
+                .orElseThrow(() -> new RuntimeException("Manager not Found"));
+        return teamRepository.findAllByManager(manager);
     }
 }
 

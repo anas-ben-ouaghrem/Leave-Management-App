@@ -64,12 +64,32 @@ public class TeamExitPermissionService {
 
         Team team = teamExitPermission.getTeam();
 
+        if (status == Status.ACCEPTED) {
+            // Erase other pending team exit permissions from the same team
+            List<TeamExitPermission> pendingTeamExitPermissions = teamExitPermissionRepository
+                    .findByTeamAndStatus(teamExitPermission.getTeam(), Status.PENDING);
+
+            for (TeamExitPermission pendingPermission : pendingTeamExitPermissions) {
+                if (!pendingPermission.getId().equals(id)) {
+                    // Erase or update status for other pending permissions
+                    // Here, assuming you want to erase them, you can use your own logic
+                    teamExitPermissionRepository.delete(pendingPermission);
+                }
+            }
+
+            // Add special actions for accepted status here
+            log.info("Team Exit Permissions accepted");
+        } else if (status == Status.REJECTED) {
+            // Add special actions for rejected status here
+            log.info("Team Exit Permissions rejected");
+        }
+
         teamExitPermission.setStatus(status);
         teamExitPermissionRepository.saveAndFlush(teamExitPermission);
-        this.mailingService.sendMail(team.getManager().getEmail(),"Team Exit Permission treated", "Your Exit Permissions with id " + id + " has been " + status);
+        this.mailingService.sendMail(team.getManager().getEmail(),"Team Exit Permission treated", "Your Team Exit Permission with id " + id + " has been " + status);
     }
 
-    public List<TeamExitPermission> getAllExternalAuthorizations() {
+    public List<TeamExitPermission> getAllTeamExitPermissions() {
         return teamExitPermissionRepository.findAll();
     }
 
@@ -86,35 +106,13 @@ public class TeamExitPermissionService {
         return teamExitPermissionRepository.findByTeamId(userId);
     }
 
-//    public List<ExternalAuthorization> getExternalAuthorizationsByManager(String managerEmail) {
-//        List<ExternalAuthorization> externalAuthorizations = new ArrayList<>();
-//        User manager = userRepository.findByEmail(managerEmail)
-//                .orElseThrow(() -> new RuntimeException("User not found"));
-//
-//        Team team = manager.getTeam();
-//        for (User user : team.getMembers()) {
-//            externalAuthorizations.addAll(user.getExternalAuthorizations());
-//        }
-//        return externalAuthorizations;
-//    }
-//
-//    public List<ExternalAuthorization> getExternalAuthorizationsByTeam(String teamName) {
-//        List<ExternalAuthorization> externalAuthorizations = new ArrayList<>();
-//        Team team = teamRepository.findByName(teamName)
-//                .orElseThrow(() -> new RuntimeException("Team not found"));
-//        for (User user : team.getMembers()) {
-//            externalAuthorizations.addAll(user.getExternalAuthorizations());
-//        }
-//        return externalAuthorizations;
-//    }
-
-    public List<TeamExitPermission> getExternalAuthorizationsByTeamManager(String managerEmail) {
+    public List<TeamExitPermission> getTeamExitPermissionsByTeamManager(String managerEmail) {
         User manager = userRepository.findByEmail(managerEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return teamExitPermissionRepository.findByTeam_Manager(manager);
     }
 
-    public List<TeamExitPermission> getTeamExitPermissionByTeam(String teamName) {
+    public List<TeamExitPermission> getTeamExitPermissionsByTeam(String teamName) {
         Team team = teamRepository.findByName(teamName)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return teamExitPermissionRepository.findByTeam(team);
@@ -129,6 +127,12 @@ public class TeamExitPermissionService {
         teamExitPermission.setEndDate(request.getDate().plusMinutes(request.getLeaveDuration().getDuration()));
         teamExitPermissionRepository.saveAndFlush(teamExitPermission);
         return teamExitPermission;
+    }
+
+    public List<TeamExitPermission> getTeamExitPermissionsByUser(String currentUserEmail) {
+        User user = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return teamExitPermissionRepository.findByTeam(user.getTeam());
     }
 }
 

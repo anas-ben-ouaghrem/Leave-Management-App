@@ -82,4 +82,11 @@ public class TeamController {
         teamService.updateTeam(teamId, request);
         return ResponseEntity.status(HttpStatus.OK).body("Team Updated Successfully");
     }
+
+    @GetMapping("/management/for-manager/{managerEmail}")
+    public ResponseEntity<List<Team>> getTeamsByManager(@PathVariable String managerEmail){
+        List<Team> teams = teamService.getTeamsByManager(managerEmail);
+        return ResponseEntity.status(HttpStatus.OK).body(teams);
+    }
+
 }

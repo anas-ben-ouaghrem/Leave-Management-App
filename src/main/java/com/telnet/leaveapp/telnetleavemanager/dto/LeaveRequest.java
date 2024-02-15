@@ -15,6 +15,7 @@ public class LeaveRequest {
 
     private String userEmail;
     private LeaveType leaveType;
+    @Builder.Default
     private ExceptionalLeaveType exceptionalLeaveType = ExceptionalLeaveType.NONE;
     @Builder.Default
     private TimeOfDay timeOfDay = TimeOfDay.INAPPLICABLE;

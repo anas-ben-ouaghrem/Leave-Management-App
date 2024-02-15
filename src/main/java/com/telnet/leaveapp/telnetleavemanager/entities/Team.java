@@ -26,6 +26,8 @@ public class Team {
     private String name;
     private String description;
     @Builder.Default
+    private int minimumAttendance = 10;
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
     @ManyToOne
     private User manager;

@@ -4,7 +4,6 @@ import com.telnet.leaveapp.telnetleavemanager.dto.ExternalAuthorizationRequest;
 import com.telnet.leaveapp.telnetleavemanager.entities.ExternalAuthorization;
 import com.telnet.leaveapp.telnetleavemanager.entities.Status;
 import com.telnet.leaveapp.telnetleavemanager.services.ExternalAuthorizationService;
-import com.telnet.leaveapp.telnetleavemanager.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +18,6 @@ public class ExternalAuthorizationController {
 
 
     private final ExternalAuthorizationService externalAuthorizationService;
-    private final UserRepository userRepository;
 
     @PostMapping("/create")
     public ResponseEntity<ExternalAuthorization> createExternalAuthorization(

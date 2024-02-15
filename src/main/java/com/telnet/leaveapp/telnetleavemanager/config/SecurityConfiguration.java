@@ -56,6 +56,7 @@ public class SecurityConfiguration {
                                 "/configuration/security",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
+                                "/api/v1/users/admin/all",
                                 "/webjars/**")
                         .permitAll()
                         .requestMatchers("/api/v1/users/admin/**","/api/v1/teams/admin/**","/api/v1/organizational-unit/**").hasRole("ADMIN")
