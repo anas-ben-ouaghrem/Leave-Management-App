@@ -92,10 +92,13 @@ public class UserService {
     public void deleteUser(String email) {
         User userToBeDeleted = repository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
-        OrganizationalUnit orgUnit = this.organizationalUnitRepository.findByManager(userToBeDeleted)
-                .orElseThrow(() -> new RuntimeException("Organizational unit with manager " + userToBeDeleted.getFirstName() + " " + userToBeDeleted.getLastName() + " not found"));
-        orgUnit.setManager(null);
-        this.organizationalUnitRepository.saveAndFlush(orgUnit);
+        if (userToBeDeleted.getOrganizationalUnit() != null) {
+            OrganizationalUnit orgUnit = this.organizationalUnitRepository.findByManager(userToBeDeleted)
+                    .orElseThrow(() -> new RuntimeException("Organizational unit with manager " + userToBeDeleted.getFirstName() + " " + userToBeDeleted.getLastName() + " not found"));
+            orgUnit.setManager(null);
+            this.organizationalUnitRepository.saveAndFlush(orgUnit);
+        }
+       
         repository.delete(userToBeDeleted);
         this.mailingService.sendMail(email, "Account deleted", "Your account has been deleted\n Please contact your administrator if you did not perform this action");
     }
