@@ -132,6 +132,10 @@ public class TeamService {
                 .orElseThrow(() -> new RuntimeException("Manager not Found"));
         return teamRepository.findAllByManager(manager);
     }
+
+     public List<Team> findTeamsByManagerEmail(String email) {
+        return teamRepository.findByManagerEmail(email);
+    }
 }
 
 
