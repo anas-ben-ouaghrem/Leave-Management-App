@@ -13,4 +13,7 @@ public interface TeamRepository extends JpaRepository<Team, Integer> {
     void deleteByName(String teamName);
 
     List<Team> findAllByManager(User manager);
+
+        List<Team> findByManagerEmail(String email);
+
 }
