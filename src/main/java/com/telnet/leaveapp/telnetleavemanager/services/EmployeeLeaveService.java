@@ -61,7 +61,9 @@ public class EmployeeLeaveService {
             // Calculate duration based on the leave type and set the end date
             calculateDurationAndSetEndDate(leave);
         }
-
+        if (currentUser.getRole() == Role.ADMIN ) {
+            leave.setStatus(Status.ACCEPTED);
+        }
         employeeLeaveRepository.save(leave);
         this.mailingService.sendMail(user.getEmail(),"Leave request created", "Your leave request has been created");
         if(Objects.equals(user.getEmail(), currentUser.getEmail()) && currentUser.getRole() == Role.MANAGER) {
