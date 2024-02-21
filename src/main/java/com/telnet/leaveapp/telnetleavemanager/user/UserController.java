@@ -115,12 +115,12 @@ public class UserController {
 
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> requestPasswordReset(@RequestParam("email") String email) {
+    public ResponseEntity<Void> requestPasswordReset(@RequestParam("email") String email) {
         try {
             userService.sendPasswordResetEmail(email);
-            return ResponseEntity.ok("Password reset email sent successfully.");
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found." + e.getMessage());
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 

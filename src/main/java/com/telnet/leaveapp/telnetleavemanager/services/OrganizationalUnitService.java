@@ -57,6 +57,7 @@ public class OrganizationalUnitService {
         } else {
             organizationalUnit.setMembers(new ArrayList<>());
         }
+        mailingService.sendMail(organizationalUnit.getManager().getEmail(), "Organizational Unit created", "The organizational unit " + organizationalUnit.getName() + " has been created. \nYou are the manager of this organizational unit");
 
         return organizationalUnitRepository.save(organizationalUnit);
     }
@@ -128,6 +129,7 @@ public class OrganizationalUnitService {
                 log.warn("Team " + teamName + " is already assigned to the organizational unit");
             }
         }
+
     }
 
     public void removeTeamFromOrganizationalUnit(Long organizationalUnitId, String teamName) {
@@ -221,6 +223,7 @@ public class OrganizationalUnitService {
                 organizationalUnit.setMembers(new ArrayList<>());
             }
             organizationalUnitRepository.saveAndFlush(organizationalUnit);
+            this.mailingService.sendMail(organizationalUnit.getManager().getEmail(), "Organizational Unit updated", "The organizational unit " + organizationalUnit.getName() + " has been updated");
         }
         return organizationalUnit;
     }

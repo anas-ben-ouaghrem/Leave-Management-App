@@ -70,7 +70,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (currentUser.getRole() != Role.ADMIN ) {
             if (targetUser.getTeam() != null) {
-                if (currentUser != targetUser.getTeam().getManager() || currentUser != targetUser.getOrganizationalUnit().getManager() || currentUser != targetUser) {
+                if (currentUser != targetUser.getTeam().getManager() || currentUser != targetUser.getOrganizationalUnit().getManager() || currentUser.getEmail().equals(targetUser.getEmail())) {
                     throw new UnauthorizedActionException("You are not authorized to update this user");
                 }
 

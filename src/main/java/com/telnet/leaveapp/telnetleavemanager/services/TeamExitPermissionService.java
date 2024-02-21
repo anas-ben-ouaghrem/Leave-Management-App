@@ -126,6 +126,7 @@ public class TeamExitPermissionService {
         teamExitPermission.setReason(request.getReason());
         teamExitPermission.setEndDate(request.getDate().plusMinutes(request.getLeaveDuration().getDuration()));
         teamExitPermissionRepository.saveAndFlush(teamExitPermission);
+        this.mailingService.sendMail(teamExitPermission.getTeam().getManager().getEmail(),"Exit Permissions request updated", "Your Exit Permissions request has been updated");
         return teamExitPermission;
     }
 

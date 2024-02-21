@@ -159,7 +159,7 @@ public class EmployeeLeaveService {
         existingLeaveRequest.setLeaveType(leaveRequest.getLeaveType() == null ? existingLeaveRequest.getLeaveType() : leaveRequest.getLeaveType());
         existingLeaveRequest.setStartDate(leaveRequest.getStartDate() == null ? existingLeaveRequest.getStartDate() : leaveRequest.getStartDate());
         existingLeaveRequest.setEndDate(leaveRequest.getEndDate() == null ? existingLeaveRequest.getEndDate() : leaveRequest.getEndDate());
-
+        this.mailingService.sendMail(existingLeaveRequest.getUser().getEmail(),"Leave request updated", "Your leave request with id: " + existingLeaveRequest.getId() + " has been updated");
         return employeeLeaveRepository.save(existingLeaveRequest);
     }
 

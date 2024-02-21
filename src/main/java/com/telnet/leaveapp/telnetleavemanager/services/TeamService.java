@@ -24,6 +24,7 @@ public class TeamService {
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
     private final OrganizationalUnitRepository organizationalUnitRepository;
+    private final MailingService mailingService;
 
 
     public void createTeam(TeamRequest request) {
@@ -72,6 +73,7 @@ public class TeamService {
         teamRepository.saveAndFlush(team);
         manager.setTeam(team);
         userRepository.saveAndFlush(manager);
+        this.mailingService.sendMail(manager.getEmail(), "Team Created", "You have been assigned as the manager of the team " + team.getName());
     }
 
     public List<Team> getAllTeams() {
@@ -102,6 +104,7 @@ public class TeamService {
         manager.setTeam(null);
         userRepository.saveAndFlush(manager);
         teamRepository.delete(team);
+        this.mailingService.sendMail(manager.getEmail(), "Team Deleted", "The team " + team.getName() + " has been deleted. You are no longer the manager of this team.");
     }
     public List<User> getMembersOfTeam(Integer teamId) {
         Team team = getTeamById(teamId);
@@ -151,6 +154,7 @@ public class TeamService {
         teamRepository.saveAndFlush(team);
         manager.setTeam(team);
         userRepository.saveAndFlush(manager);
+        this.mailingService.sendMail(manager.getEmail(), "Team Updated", "You have been assigned as the manager of the team " + team.getName());
     }
 
     public List<Team> getTeamsByManager(String managerEmail) {

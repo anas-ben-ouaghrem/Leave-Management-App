@@ -53,6 +53,9 @@ public class ExternalAuthorizationService {
                 .user(user)
                 .build();
         this.mailingService.sendMail(user.getEmail(),"Exit Permissions request created", "Your Exit Permissions request has been created");
+        if (user.getTeam() != null) {
+            this.mailingService.sendMail(user.getTeam().getManager().getEmail(),"Exit Permissions request created", "Your team member " + user.getFirstName() + " " + user.getLastName() + " has created an Exit Permissions request");
+        }
         return externalAuthorizationRepository.save(externalAuthorization);
     }
 
@@ -159,6 +162,7 @@ public class ExternalAuthorizationService {
         externalAuthorization.setReason(request.getReason());
         externalAuthorization.setEndDate(request.getDate().plusMinutes(request.getLeaveDuration().getDuration()));
         externalAuthorizationRepository.saveAndFlush(externalAuthorization);
+        this.mailingService.sendMail(externalAuthorization.getUser().getEmail(),"Exit Permissions request updated", "Your Exit Permissions request has been updated");
         return externalAuthorization;
     }
 }

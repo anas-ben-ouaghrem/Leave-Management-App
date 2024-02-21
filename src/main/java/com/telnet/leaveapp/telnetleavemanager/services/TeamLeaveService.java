@@ -51,6 +51,7 @@ public class TeamLeaveService {
                 .team(team)
                 .status(Status.PENDING)
                 .build();
+        mailingService.sendMail(team.getManager().getEmail(), "Leave Request", "The employee " + team.getManager().getFirstName() + " " + team.getManager().getLastName() + " has requested a leave for the period " + teamLeave.getStartDate() + " - " + teamLeave.getEndDate() + ". Please check the leave request and take the appropriate action.");
         return teamLeaveRepository.save(teamLeave);
     }
 
@@ -140,6 +141,7 @@ public class TeamLeaveService {
         teamLeave.setEndDate(request.getEndDate());
         teamLeave.setReason(request.getReason());
         teamLeaveRepository.save(teamLeave);
+        mailingService.sendMail(teamLeave.getTeam().getManager().getEmail(), "Leave Request Update", "The employee " + teamLeave.getTeam().getManager().getFirstName() + " " + teamLeave.getTeam().getManager().getLastName() + " has updated his leave request for the period " + teamLeave.getStartDate() + " - " + teamLeave.getEndDate() + ". Please check the leave request and take the appropriate action.");
         return teamLeave;
     }
 }
