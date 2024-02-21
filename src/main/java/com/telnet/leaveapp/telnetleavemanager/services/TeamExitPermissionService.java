@@ -47,7 +47,8 @@ public class TeamExitPermissionService {
                 .createdAt(LocalDateTime.now())
                 .team(team)
                 .build();
-        this.mailingService.sendMail(team.getManager().getEmail(),"Exit Permissions request created", "Your Exit Permissions request has been created");
+        this.mailingService.sendMail(team.getManager().getEmail(),"Exit Permissions request created", "Your Team Exit Permissions request has been created");
+        this.mailingService.sendMail(team.getOrganizationalUnit().getManager().getEmail(),"Exit Permissions request created", "Your team manager " + currentUser.getFirstName() + " " + currentUser.getLastName() +  " has created an Exit Permissions request");
         return teamExitPermissionRepository.save(teamExitPermission);
     }
 
