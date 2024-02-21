@@ -10,6 +10,7 @@ import com.telnet.leaveapp.telnetleavemanager.user.User;
 import com.telnet.leaveapp.telnetleavemanager.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -108,6 +109,9 @@ public class EmployeeLeaveService {
                 }
             }
             leaveRequest.setStatus(Status.ACCEPTED);
+            if (leaveRequest.getStartDate().isBefore(LocalDateTime.now()) && leaveRequest.getEndDate().isAfter(LocalDateTime.now())) {
+                userRequestingLeave.setOnLeave(true);
+            }
             userRequestingLeave.setOnLeave(true);
             userRequestingLeave.setReturnDate(leaveRequest.getEndDate());
             userRepository.save(userRequestingLeave);
@@ -213,5 +217,20 @@ public class EmployeeLeaveService {
             leaveRequests.addAll(employeeLeaveRepository.findAllByUser_Id(user.getId()));
         }
         return leaveRequests;
+    }
+
+    @Scheduled(fixedDelay = 60*60*1000)
+    public void checkOnLeaveUsers() {
+        List<EmployeeLeave> leaveRequests = employeeLeaveRepository.findAll().stream().filter(leaveRequest -> leaveRequest.getStatus() == Status.ACCEPTED).toList();
+        for (EmployeeLeave leaveRequest : leaveRequests) {
+            if (leaveRequest.getEndDate().isBefore(LocalDateTime.now())) {
+                leaveRequest.getUser().setOnLeave(false);
+                userRepository.save(leaveRequest.getUser());
+            }
+            if (leaveRequest.getStartDate().isAfter(LocalDateTime.now())) {
+                leaveRequest.getUser().setOnLeave(true);
+                userRepository.save(leaveRequest.getUser());
+            }
+        }
     }
 }
