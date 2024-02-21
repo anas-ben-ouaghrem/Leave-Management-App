@@ -225,11 +225,11 @@ public class EmployeeLeaveService {
         for (EmployeeLeave leaveRequest : leaveRequests) {
             if (leaveRequest.getEndDate().isBefore(LocalDateTime.now())) {
                 leaveRequest.getUser().setOnLeave(false);
-                userRepository.save(leaveRequest.getUser());
+                userRepository.saveAndFlush(leaveRequest.getUser());
             }
-            if (leaveRequest.getStartDate().isAfter(LocalDateTime.now())) {
+            if (leaveRequest.getStartDate().isBefore(LocalDateTime.now())) {
                 leaveRequest.getUser().setOnLeave(true);
-                userRepository.save(leaveRequest.getUser());
+                userRepository.saveAndFlush(leaveRequest.getUser());
             }
         }
     }
