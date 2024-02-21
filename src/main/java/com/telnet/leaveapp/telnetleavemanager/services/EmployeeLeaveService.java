@@ -67,8 +67,8 @@ public class EmployeeLeaveService {
         employeeLeaveRepository.save(leave);
         this.mailingService.sendMail(user.getEmail(),"Leave request created", "Your leave request has been created");
         if(Objects.equals(user.getEmail(), currentUser.getEmail()) && currentUser.getRole() == Role.MANAGER) {
-            this.mailingService.sendMail(currentUser.getTeam().getOrganizationalUnit().getManager().getEmail(),"Leave request created", "Leave request for " + user.getEmail() + " has been created");
-        } else this.mailingService.sendMail(currentUser.getEmail(),"Leave request created", "Leave request for " + user.getEmail() + " has been created");
+            this.mailingService.sendMail(user.getTeam().getOrganizationalUnit().getManager().getEmail(),"Leave request created", "Leave request for " + user.getEmail() + " has been created");
+        } else this.mailingService.sendMail(user.getTeam().getManager().getEmail(),"Leave request created", "Leave request for " + user.getEmail() + " has been created");
     }
 
     private void calculateDurationAndSetEndDate(EmployeeLeave leave) {
