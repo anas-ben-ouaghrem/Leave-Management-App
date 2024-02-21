@@ -25,7 +25,7 @@ public class TeamService {
     private final UserRepository userRepository;
     private final OrganizationalUnitRepository organizationalUnitRepository;
 
-    @Transactional
+
     public void createTeam(TeamRequest request) {
         User manager = userRepository.findByEmail(request.getTeamLeadEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -46,6 +46,18 @@ public class TeamService {
         if (request.getOrganizationalUnitName() != null) {
             organizationalUnit = organizationalUnitRepository.findByName(request.getOrganizationalUnitName())
                     .orElseThrow(() -> new RuntimeException("Organizational Unit Not Found!"));
+        }
+
+        if (request.getName() == null || request.getName().isBlank()) {
+            throw new IllegalArgumentException("Team name is required");
+        }
+
+        if (request.getOrganizationalUnitName() == null) {
+            throw new IllegalArgumentException("Department Name is required");
+        }
+
+        if (request.getTeamLeadEmail() == null || request.getTeamLeadEmail().isBlank()) {
+            throw new IllegalArgumentException("Team Lead Email is required");
         }
 
         Team team = Team.builder()
@@ -86,6 +98,9 @@ public class TeamService {
     public void deleteTeamByName(String name) {
         Team team = teamRepository.findByName(name)
                         .orElseThrow(()-> new RuntimeException("Team with name " + name + "not found"));
+        User manager = team.getManager();
+        manager.setTeam(null);
+        userRepository.saveAndFlush(manager);
         teamRepository.delete(team);
     }
     public List<User> getMembersOfTeam(Integer teamId) {
@@ -94,12 +109,23 @@ public class TeamService {
     }
 
     public void updateTeam(Integer teamId, TeamRequest request) {
-        System.out.println(request);
         Team team = teamRepository.findById(teamId).orElseThrow(() -> new RuntimeException("Team not found"));
         User manager = userRepository.findByEmail(request.getTeamLeadEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (manager.getRole() == Role.USER ) {
             throw new IllegalStateException("User set for manager is not a manager nor an admin");
+        }
+
+        if (request.getName() == null || request.getName().isBlank()) {
+            throw new IllegalArgumentException("Team name is required");
+        }
+
+        if (request.getOrganizationalUnitName() == null) {
+            throw new IllegalArgumentException("Department Name is required");
+        }
+
+        if (request.getTeamLeadEmail() == null || request.getTeamLeadEmail().isBlank()) {
+            throw new IllegalArgumentException("Team Lead Email is required");
         }
 
         List<User> members = new ArrayList<>();

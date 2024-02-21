@@ -39,6 +39,10 @@ public class TeamLeaveService {
             throw new UnauthorizedActionException("You are unauthorized to create team leave requests for this team");
         }
 
+        if (Objects.isNull(request.getStartDate()) || Objects.isNull(request.getEndDate())) {
+            throw new IllegalArgumentException("Start date and end date are required");
+        }
+
         TeamLeave teamLeave = TeamLeave.builder()
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
