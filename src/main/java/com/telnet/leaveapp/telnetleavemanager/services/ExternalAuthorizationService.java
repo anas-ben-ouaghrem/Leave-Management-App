@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -65,7 +66,8 @@ public class ExternalAuthorizationService {
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (currentUser.getRole() != Role.ADMIN ) {
-            if (currentUser != externalAuthorization.getUser().getOrganizationalUnit().getManager() || currentUser != externalAuthorization.getUser().getTeam().getManager()) {
+
+            if (!Objects.equals(currentUser.getEmail(), externalAuthorization.getUser().getTeam().getManager().getEmail())) {
                 throw new UnauthorizedActionException("You are not authorized to treat this Exit Permissions");
             }
         }
