@@ -169,6 +169,9 @@ public class EmployeeLeaveService {
         existingLeaveRequest.setStartDate(leaveRequest.getStartDate() == null ? existingLeaveRequest.getStartDate() : leaveRequest.getStartDate());
         existingLeaveRequest.setEndDate(leaveRequest.getEndDate() == null ? existingLeaveRequest.getEndDate() : leaveRequest.getEndDate());
         this.mailingService.sendMail(existingLeaveRequest.getUser().getEmail(),"Leave request updated", "Your leave request with id: " + existingLeaveRequest.getId() + " has been updated");
+        if(Objects.equals(existingLeaveRequest.getUser().getEmail(), existingLeaveRequest.getUser().getEmail()) && existingLeaveRequest.getUser().getRole() == Role.MANAGER) {
+            this.mailingService.sendMail(existingLeaveRequest.getUser().getTeam().getOrganizationalUnit().getManager().getEmail(),"Leave request created", "Leave request for " + existingLeaveRequest.getUser().getEmail() + " has been created");
+        } else this.mailingService.sendMail(existingLeaveRequest.getUser().getTeam().getManager().getEmail(),"Leave request created", "Leave request for " + existingLeaveRequest.getUser().getEmail() + " has been created");
         return employeeLeaveRepository.save(existingLeaveRequest);
     }
 

@@ -51,7 +51,8 @@ public class TeamLeaveService {
                 .team(team)
                 .status(Status.PENDING)
                 .build();
-        mailingService.sendMail(team.getManager().getEmail(), "Leave Request", "The employee " + team.getManager().getFirstName() + " " + team.getManager().getLastName() + " has requested a leave for the period " + teamLeave.getStartDate() + " - " + teamLeave.getEndDate() + ". Please check the leave request and take the appropriate action.");
+        mailingService.sendMail(team.getOrganizationalUnit().getManager().getEmail(), "Leave Request", "The Team manager " + team.getManager().getFirstName() + " " + team.getManager().getLastName() + " has requested a leave for his team " + team.getName() + " for the period " + teamLeave.getStartDate() + " - " + teamLeave.getEndDate() + ". Please check the leave request and take the appropriate action.");
+        mailingService.sendMail(team.getManager().getEmail(), "Leave Request", "You have requested a leave for your team " + team.getName() + " for the period " + teamLeave.getStartDate() + " - " + teamLeave.getEndDate() + ".");
         return teamLeaveRepository.save(teamLeave);
     }
 
@@ -88,7 +89,8 @@ public class TeamLeaveService {
             throw new IllegalArgumentException("Invalid status provided.");
         }
 
-        this.mailingService.sendMail(leaveRequest.getTeam().getManager().getEmail(), "Leave Request Update", "The employee " + leaveRequest.getTeam().getManager().getFirstName() + " " + leaveRequest.getTeam().getManager().getLastName() + " has updated his leave request for the period " + leaveRequest.getStartDate() + " - " + leaveRequest.getEndDate() + ". Please check the leave request and take the appropriate action.");
+        this.mailingService.sendMail(leaveRequest.getTeam().getOrganizationalUnit().getManager().getEmail(), "Team Leave Request Update", "The team manager of team  " + leaveRequest.getTeam().getName() + " " + leaveRequest.getTeam().getManager().getFirstName() + " " + leaveRequest.getTeam().getManager().getLastName() + " has updated his team leave request for the period " + leaveRequest.getStartDate() + " - " + leaveRequest.getEndDate() + ". Please check the leave request and take the appropriate action.");
+        this.mailingService.sendMail(leaveRequest.getTeam().getManager().getEmail(), "Team Leave Request Update", "You have updated your team leave request for the period " + leaveRequest.getStartDate() + " - " + leaveRequest.getEndDate() + ".");
         return teamLeaveRepository.save(leaveRequest);
     }
 

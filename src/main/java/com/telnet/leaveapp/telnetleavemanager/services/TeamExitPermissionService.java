@@ -48,7 +48,7 @@ public class TeamExitPermissionService {
                 .team(team)
                 .build();
         this.mailingService.sendMail(team.getManager().getEmail(),"Exit Permissions request created", "Your Team Exit Permissions request has been created");
-        this.mailingService.sendMail(team.getOrganizationalUnit().getManager().getEmail(),"Exit Permissions request created", "Your team manager " + currentUser.getFirstName() + " " + currentUser.getLastName() +  " has created an Exit Permissions request");
+        this.mailingService.sendMail(team.getOrganizationalUnit().getManager().getEmail(),"Exit Permissions request created", "Your team manager " + currentUser.getFirstName() + " " + currentUser.getLastName() + " for the team: " + team.getName() +  " has created a Team Exit Permissions request");
         return teamExitPermissionRepository.save(teamExitPermission);
     }
 
@@ -128,6 +128,7 @@ public class TeamExitPermissionService {
         teamExitPermission.setEndDate(request.getDate().plusMinutes(request.getLeaveDuration().getDuration()));
         teamExitPermissionRepository.saveAndFlush(teamExitPermission);
         this.mailingService.sendMail(teamExitPermission.getTeam().getManager().getEmail(),"Exit Permissions request updated", "Your Exit Permissions request has been updated");
+        this.mailingService.sendMail(teamExitPermission.getTeam().getOrganizationalUnit().getManager().getEmail(),"Exit Permissions request updated", "Your team manager " + teamExitPermission.getTeam().getManager().getFirstName() + " " + teamExitPermission.getTeam().getManager().getLastName() + " for the team: " + teamExitPermission.getTeam().getName() +  " has updated a Team Exit Permissions request");
         return teamExitPermission;
     }
 
