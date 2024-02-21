@@ -8,6 +8,7 @@ import com.telnet.leaveapp.telnetleavemanager.repositories.EmployeeLeaveReposito
 import com.telnet.leaveapp.telnetleavemanager.user.Role;
 import com.telnet.leaveapp.telnetleavemanager.user.User;
 import com.telnet.leaveapp.telnetleavemanager.user.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,6 +18,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -62,7 +64,9 @@ public class EmployeeLeaveService {
 
         employeeLeaveRepository.save(leave);
         this.mailingService.sendMail(user.getEmail(),"Leave request created", "Your leave request has been created");
-        this.mailingService.sendMail(currentUser.getEmail(),"Leave request created", "Leave request for " + user.getEmail() + " has been created");
+        if(Objects.equals(user.getEmail(), currentUser.getEmail()) && currentUser.getRole() == Role.MANAGER) {
+            this.mailingService.sendMail(currentUser.getTeam().getOrganizationalUnit().getManager().getEmail(),"Leave request created", "Leave request for " + user.getEmail() + " has been created");
+        } else this.mailingService.sendMail(currentUser.getEmail(),"Leave request created", "Leave request for " + user.getEmail() + " has been created");
     }
 
     private void calculateDurationAndSetEndDate(EmployeeLeave leave) {
@@ -112,7 +116,6 @@ public class EmployeeLeaveService {
             if (leaveRequest.getStartDate().isBefore(LocalDateTime.now()) && leaveRequest.getEndDate().isAfter(LocalDateTime.now())) {
                 userRequestingLeave.setOnLeave(true);
             }
-            userRequestingLeave.setOnLeave(true);
             userRequestingLeave.setReturnDate(leaveRequest.getEndDate());
             userRepository.save(userRequestingLeave);
             updateLeaveBalance(leaveRequest, userRequestingLeave);
@@ -220,17 +223,27 @@ public class EmployeeLeaveService {
     }
 
     @Scheduled(fixedDelay = 60*60*1000)
+    @Transactional
     public void checkOnLeaveUsers() {
-        List<EmployeeLeave> leaveRequests = employeeLeaveRepository.findAll().stream().filter(leaveRequest -> leaveRequest.getStatus() == Status.ACCEPTED).toList();
+        log.info("Scheduled task started.");
+        List<EmployeeLeave> leaveRequests = employeeLeaveRepository.findAll().stream()
+                .filter(leaveRequest -> leaveRequest.getStatus() == Status.ACCEPTED)
+                .toList();
+        log.info("Leave requests: " + leaveRequests);
         for (EmployeeLeave leaveRequest : leaveRequests) {
-            if (leaveRequest.getEndDate().isBefore(LocalDateTime.now())) {
-                leaveRequest.getUser().setOnLeave(false);
-                userRepository.saveAndFlush(leaveRequest.getUser());
-            }
-            if (leaveRequest.getStartDate().isBefore(LocalDateTime.now())) {
-                leaveRequest.getUser().setOnLeave(true);
-                userRepository.saveAndFlush(leaveRequest.getUser());
-            }
+                if (leaveRequest.getEndDate().isBefore(LocalDateTime.now())) {
+                    log.info("User " + leaveRequest.getUser().getEmail() + " has returned from leave");
+                    leaveRequest.getUser().setOnLeave(false);
+                    leaveRequest.getUser().setReturnDate(null);
+                    userRepository.saveAndFlush(leaveRequest.getUser());
+                } else if (leaveRequest.getStartDate().isBefore(LocalDateTime.now())) {
+                    log.info("User " + leaveRequest.getUser().getEmail() + " is on leave");
+                    leaveRequest.getUser().setOnLeave(true);
+                    leaveRequest.getUser().setReturnDate(leaveRequest.getEndDate());
+                    userRepository.saveAndFlush(leaveRequest.getUser());
+                }
+
         }
+        log.info("Scheduled task finished.");
     }
 }
